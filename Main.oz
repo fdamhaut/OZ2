@@ -50,6 +50,8 @@ define
   Spawns
   Walls
   Boxes
+
+  TickingBomb
 in
 
   %%%%% UTILS : Communication
@@ -144,9 +146,9 @@ in
   fun{IsNear Pos1 Pos2}
     case Pos1#Pos2 of pt(x:X1 y:Y1)#pt(x:X2 y:Y2) then
       if X1 == X2 then
-        (Y1 == Y2+1) orelse (Y1 == Y2-1) 
+        ( (Y1 == Y2+1) orelse (Y1 == Y2-1) ) %%% ERROR 
       elseif Y1 == Y2 then
-        (X1 == X2+1) orelse (X1 == X2-1)
+        ( (X1 == X2+1) orelse (X1 == X2-1) ) %%% ERROR
       end
     end
     false
@@ -208,7 +210,7 @@ in
   fun{GeneratePlayers}
     fun{GeneratePlayer Bombers Types}
       case Types#Bombers of (HTypes|TTypes)#(HBombers|TBombers) then
-        {PlayerManager.PlayerGenerator HTypes HBombers}|{InitPlayer ID+1 TTypes TBombers}
+        {PlayerManager.PlayerGenerator HTypes HBombers}|{GeneratePlayer TTypes TBombers}
       else
         nil
       end
@@ -263,7 +265,7 @@ in
 
   %%%%% GameEvent
 
-  proc{DetroyBox Pos Boxes Bonus Points NewBoxes NewBonus NewPoints}
+  proc{DestroyBox Pos Boxes Bonus Points NewBoxes NewBonus NewPoints}
     if {List.member Pos Boxes} then
       if {ReadMap Pos} == 2 then
         {RemoveBox Pos}
@@ -285,7 +287,7 @@ in
   fun{ExplodeBomb Pos Walls Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
     fun{SpreadFire X Y DeltaX DeltaY Remaining Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
       if {List.member pt(x:X y:Y) Walls} then
-        skip
+        NewFire
       elseif {List.member pt(x:X y:Y) Boxes} then
         {DestroyBox pt(x:X y:Y) Boxes Bonus Points NewBoxes NewBonus NewPoints}
         NewFire
@@ -296,24 +298,29 @@ in
       else
         NewFire
       end
+    end
 
-      MidBoxes1
-      MidBoxes2
-      MidBoxes3
-      MidBonus1
-      MidBonus2
-      MidBonus3
-      MidPoints1
-      MidPoints2
-      MidPoints3
-      MidBombs1
-      MidBombs2
-      MidBombs3
-      Fire1
-      Fire2
-      Fire3
+    MidBoxes1
+    MidBoxes2
+    MidBoxes3
 
-      FireDist
+    MidBonus1
+    MidBonus2
+    MidBonus3
+
+    MidPoints1
+    MidPoints2
+    MidPoints3
+
+    MidBombs1
+    MidBombs2
+    MidBombs3
+
+    Fire1
+    Fire2
+    Fire3
+
+    FireDist
   in
     if {list.member Pos Bombs} then
       FireDist = Input.Fire
@@ -326,7 +333,7 @@ in
     end
   end
 
-  fun{PlayerActions PlayerData Actions Bonus Bombs Points NewBonus NewBombs NewPoints Fire}
+  fun{PlayerActions PlayerData Actions Boxes Bonus Bombs Points NewBonus NewBombs NewPoints Fire}
     fun{PlayerAction PlayersData Action Bonus Bombs Points}
       if{Value.isDet Action} then
         case PlayersData of Bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE)|TData then
@@ -356,7 +363,7 @@ in
                 end
               end
             else
-              Bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE)|{PlayerAction TData T Bonus Bombs}
+              Bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE)|{PlayerAction TData T Bonus Bombs Points}
             end
           [] bomb(Pos)|T then
             if Pos == POS andthen BOMBS > 1 then
@@ -414,7 +421,7 @@ in
       end
     end
   in
-    {TickBomb Boxes Bonus Bombs nil Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
+    {TickBomb Boxes Bonus Bombs nil Points Walls nil NewBoxes NewBonus NewBombs NewPoints NewFire}
   end
 
 
@@ -423,23 +430,26 @@ in
   %%%%% GameLoop
 
   proc{Game}
-    proc{GameLoop PlayersData Boxes Bonus Bombs Point Fire}
+    proc{GameLoop PlayersData Boxes Bonus Bombs Points Fire}
       Actions
 
       MidBombs
+      MidPoints
+      MidBonus
 
       NewData
       NewPos
       NewBoxes
       NewBonus
-      NewPoint
+      NewBombs
+      NewPoints
       NewFire
     in
       {RemoveAllFire Fire}
 
       Actions = {GetActions}
 
-      {TickBombs Boxes Bonus Bombs Points Walls NewBoxes NewBonus MidBombs MidPoints NewFire}
+      {TickBombs Boxes Bonus Bombs Points Walls NewBoxes MidBonus MidBombs MidPoints NewFire}
 
       if Input.isTurnByTurn then
         {Delay Input.ThinkMin}
@@ -447,14 +457,14 @@ in
         {WaitList Actions}
       end
 
-      NewData = {PlayerActions PlayerData Actions MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
+      NewData = {PlayerActions PlayersData Actions NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
 
       %% Check If Games Continues
 
-      {GameLoop NewData NewBoxes NewBonus NewPoint NewFire}
+      {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire}
     end
   in
-    {GameLoop Data Boxes Bombs nil nil nil}
+    {GameLoop PlayersData Boxes nil nil nil nil}
   end
 
 
@@ -469,6 +479,12 @@ in
 
   Boxes = {Flatten {FindMap 2}|{FindMap 3}}
   Walls = {FindMap 1}
+
+  if Input.isTurnByTurn then
+    TickingBomb = Input.TimingBomb
+  else
+    TickingBomb = Input.TimingBombMin
+  end
 
   {Game}
 end
