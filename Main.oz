@@ -2,6 +2,7 @@ functor
 import
   GUI
   Input
+  Browser
   PlayerManager
   OS
 define
@@ -473,6 +474,8 @@ in
       NewPoints
       NewFire
     in
+      {Browser.browse 'NewTurn'}
+      
       {RemoveAllFire Fire}
 
       Actions = {GetActions}
@@ -480,14 +483,15 @@ in
       {TickBombs Boxes Bonus Bombs Points Walls NewBoxes MidBonus MidBombs MidPoints NewFire}
 
       if Input.isTurnByTurn then
-        {Delay Input.thinkMin}
-      else
         {WaitList Actions}
+      else
+        {Delay Input.thinkMin}
       end
 
       NewData = {PlayerActions PlayersData Actions NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
 
       %% Check If Games Continues
+      {Browser.browse 'EndTurn'}
 
       {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire}
     end
