@@ -50,7 +50,7 @@ in
 
    NbBombers = 2
    Bombers = [player000bomber player000bomber]
-   ColorBombers = [yellow red]
+   ColorBombers = [green red]
 
 %%%% Parameters %%%%
 
