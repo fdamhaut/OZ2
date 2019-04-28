@@ -386,14 +386,37 @@ in
       MidBoxes
       MidBombs
       MidPoints
+      MidBonus
       MidFire 
     in
-      case Bombs of Pos#Time|T then
+      case Bombs of Pos#Time|TBombs then
         if Input.isTurnByTurn then
           if Time > 1 then
-            {TickBomb Boxes Bonus Bombs BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
+            {TickBomb Boxes Bonus TBombs (Pos#Time-1)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
           else
-            MidFire = fun{ExplodeBomb Pos Walls Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
+            MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
+            {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
+          end
+        else
+          if Time > Input.ThinkMin then
+            {TickBomb Boxes Bonus TBombs (Pos#Time.ThinkMin)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
+          else
+            MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
+            {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
+          end
+        end
+      else
+        NewFire = Fire
+        NewBoxes = Boxes
+        NewBonus = Bonus
+        NewPoints = Points
+        NewBombs = Bombs
+      end
+    end
+  in
+    {TickBomb Boxes Bonus Bombs nil Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
+  end
+
 
 
 
