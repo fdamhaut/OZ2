@@ -144,9 +144,9 @@ in
   fun{IsNear Pos1 Pos2}
     case Pos1#Pos2 of pt(x:X1 y:Y1)#pt(x:X2 y:Y2) then
       if X1 == X2 then
-        (Y1 == Y2+1) || (Y1 == Y2-1) 
+        (Y1 == Y2+1) orelse (Y1 == Y2-1) 
       elseif Y1 == Y2 then
-        (X1 == X2+1) || (X1 == X2-1)
+        (X1 == X2+1) orelse (X1 == X2-1)
       end
     end
     false
@@ -332,7 +332,7 @@ in
         case PlayersData of Bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE)|TData then
           case Action 
           of move(Pos)|T then
-            if {IsNear Pos POS} && !({List.member Pos Walls} || {List.member Pos Boxes} || {List.member Pos Bombs}) then
+            if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {List.member Pos Bombs}) ) == false then
               if {List.member Pos Fire} then
                 if LIFE > 1 then
                   {Move ID SPAWN}
@@ -359,7 +359,7 @@ in
               Bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE)|{PlayerAction TData T Bonus Bombs}
             end
           [] bomb(Pos)|T then
-            if Pos == POS && BOMBS > 1 then
+            if Pos == POS andthen BOMBS > 1 then
               {PlaceBomb Pos}
               Bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE)|{PlayerAction TData T Pos#TickingBomb|Bombs}
             else
