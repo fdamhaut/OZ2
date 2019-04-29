@@ -18,6 +18,7 @@ define
   ReadMap
   FindMap
   IsNear
+  PosEqual
 
   RemoveAllFire
   PlaceBomb
@@ -32,11 +33,13 @@ define
   DataPlayers
   GetActions
   Respawn
+  BEqual
 
   DestroyBox
   ExplodeBomb
   PlayerActions
   TickBombs
+  RecuperateBombs
 
   Game
 
@@ -55,6 +58,7 @@ define
   Boxes
 
   TickingBomb
+  TimeByTick
 in
 
   %%%%% UTILS : Communication
@@ -159,6 +163,14 @@ in
       else
         false
       end
+    else
+      false
+    end
+  end
+
+  fun{PosEqual Pos1 Pos2}
+    case Pos1#Pos2 of pt(x:X1 y:Y1)#pt(x:X2 y:Y2) then
+      X1 == X2 andthen Y1 == Y2
     else
       false
     end
@@ -284,6 +296,14 @@ in
     {GetPlayerAction PortPlayers}
   end
 
+  fun{BEqual B1 B2}
+    case B1#B2 of bomber(id:ID1 color:HColors1 name:N1)#bomber(id:ID2 color:HColors2 name:N2) then
+      ID1 == ID2
+    else
+      false
+    end
+  end
+
 
   %%%%% GameEvent
 
@@ -355,65 +375,68 @@ in
     end
   end
 
-  fun{PlayerActions PlayerData Actions Boxes Bonus Bombs Points NewBonus NewBombs NewPoints Fire}
-    fun{PlayerAction PlayersData Action Bonus Bombs Points}
-      if{Value.isDet Action} then
-        case PlayersData of bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData then
-          case Action 
-          of move(Pos)|T then
+  fun{PlayerActions PlayerData Actions Boxes Bonus Bombs Points RecupBombs NewBonus NewBombs NewPoints Fire NewRecupBombs}
+    fun{PlayerAction PlayersData Actions Bonus Bombs Points RecupBombs}
+      case PlayersData#Actions of (bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData)#(Action|TAct) then
+        if{Value.isDet Action} then
+          case Action
+          of move(Pos) then
             if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {List.member Pos Bombs}) ) == false then
               if {List.member Pos Fire} then
                 if LIFE > 1 then
                   {Die PORT}
                   {Respawn PORT}
-                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
+                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
                 else
                   {Die PORT}
-                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
+                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
                 end
               else
                 {Move ID Pos}
                 if {List.member Pos Points} then
                   {SendGui scoreUpdate(ID SCORE+1)}
                   {Send PORT add(point 1)}
-                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+1 port:PORT)|{PlayerAction TData T Bonus Bombs {ListRemove Points Pos}}
+                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+1 port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
                 elseif {List.member Pos Bonus} then
                   if ({OS.rand} mod 2) == 0 then
                     {Send PORT add(bomb 1)}
-                    bdata(id:ID life:LIFE bombs:BOMBS+1 pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T {ListRemove Bonus Pos} Bombs Points}
+                    bdata(id:ID life:LIFE bombs:BOMBS+1 pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
                   else
                     {Send PORT add(point 10)}
-                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+10 port:PORT)|{PlayerAction TData T {ListRemove Bonus Pos} Bombs Points}
+                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+10 port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
                   end
                 else
-                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
+                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
                 end
               end
             else
-              bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
+              bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
             end
-          [] bomb(Pos)|T then
-            if Pos == POS andthen BOMBS > 1 then
+          [] bomb(Pos) then
+            {Browser.browse Pos#POS}
+            if Pos == POS andthen BOMBS >= 1 then
               {PlaceBomb Pos}
-              bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Pos#TickingBomb|Bombs Points}
+              {Browser.browse 'BOOOOOOM'}
+              bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Pos#TickingBomb|Bombs Points (ID#TickingBomb)|RecupBombs}
             else
-              bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
+              bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
             end
-          [] H|T then
-            bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData T Bonus Bombs Points}
           else
-            NewBombs = Bombs
-            NewBonus = Bonus
-            NewPoints = Points
-            nil
+            bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
           end
         else
-          nil
+          bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
         end
+      else
+        NewBombs = Bombs
+        NewBonus = Bonus
+        NewPoints = Points
+        NewRecupBombs = RecupBombs
+        nil
       end
     end
   in
-    {PlayerAction PlayerData Actions Bonus Bombs Points}
+    {PlayerAction PlayerData Actions Bonus Bombs Points RecupBombs}
   end
 
 
@@ -425,21 +448,12 @@ in
       MidBonus
       MidFire 
     in
-      case Bombs of Pos#Time|TBombs then
-        if Input.isTurnByTurn then
-          if Time > 1 then
-            {TickBomb Boxes Bonus TBombs (Pos#Time-1)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
-          else
-            MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
-            {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
-          end
+      case Bombs of (Pos#Time)|TBombs then
+        if Time > TimeByTick then
+          {TickBomb Boxes Bonus TBombs (Pos#(Time-TimeByTick))|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
         else
-          if Time > Input.thinkMin then
-            {TickBomb Boxes Bonus TBombs (Pos#Time.thinkMin)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
-          else
-            MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
-            {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
-          end
+          MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
+          {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
         end
       else
         NewFire = Fire
@@ -454,17 +468,42 @@ in
   end
 
 
-
-
+  fun{RecuperateBombs Recup PlayersData NewData}
+    fun{AddBomb ID PlayersData}
+      case PlayersData of bdata(id:IDB life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData then
+        if {BEqual ID IDB} then
+          bdata(id:IDB life:LIFE bombs:BOMBS+1 pos:POS spawn:SPAWN score:SCORE port:PORT)|TData
+        else
+          bdata(id:IDB life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{AddBomb ID TData}
+        end
+      else
+        nil
+      end
+    end
+  in
+    case Recup of (ID#Timimg)|T then
+      if Timimg > TimeByTick then
+        (ID#(Timimg-TimeByTick))|{RecuperateBombs T PlayersData NewData}
+      else
+        {RecuperateBombs T {AddBomb ID PlayersData} NewData}
+      end
+    else
+      NewData = PlayersData
+    end
+  end
   %%%%% GameLoop
 
   proc{Game}
-    proc{GameLoop PlayersData Boxes Bonus Bombs Points Fire}
+    proc{GameLoop PlayersData Boxes Bonus Bombs Points Fire RecupBombs}
       Actions
+
+      MidRecupBombs
+      NewRecupBombs
 
       MidBombs
       MidPoints
       MidBonus
+      MidData
 
       NewData
       NewPos
@@ -482,21 +521,26 @@ in
 
       {TickBombs Boxes Bonus Bombs Points Walls NewBoxes MidBonus MidBombs MidPoints NewFire}
 
+      MidRecupBombs = {RecuperateBombs RecupBombs PlayersData MidData}
+
       if Input.isTurnByTurn then
         {WaitList Actions}
       else
         {Delay Input.thinkMin}
       end
 
-      NewData = {PlayerActions PlayersData Actions NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
+      {Browser.browse Actions}
+      {Delay 5000}
+
+      NewData = {PlayerActions MidData Actions NewBoxes MidBonus MidBombs MidPoints MidRecupBombs NewBonus NewBombs NewPoints NewFire NewRecupBombs}
 
       %% Check If Games Continues
       {Browser.browse 'EndTurn'}
 
-      {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire}
+      {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire NewRecupBombs}
     end
   in
-    {GameLoop PlayersData Boxes nil nil nil nil}
+    {GameLoop PlayersData Boxes nil nil nil nil nil}
   end
 
 
@@ -514,8 +558,10 @@ in
 
   if Input.isTurnByTurn then
     TickingBomb = Input.timingBomb
+    TimeByTick = 1
   else
     TickingBomb = Input.timingBombMin
+    TimeByTick = Input.thinkMin
   end
 
   {Game}
