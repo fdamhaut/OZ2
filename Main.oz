@@ -442,6 +442,9 @@ in
 
   fun{PlayerActions PlayerData Actions Boxes Bonus Bombs Points RecupBombs NewBonus NewBombs NewPoints Fire NewRecupBombs}
     fun{PlayerAction PlayersData Actions Bonus Bombs Points RecupBombs}
+      BOMBSTOT
+      POINTTOT
+    in
       case PlayersData#Actions of (bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData)#(Action|TAct) then
         if{Value.isDet Action} then
           case Action
@@ -461,16 +464,16 @@ in
                 if {List.member Pos Points} then
                   {SendGui hidePoint(Pos)}
                   {SendGui scoreUpdate(ID SCORE+1)}
-                  {Send PORT add(point 1)}
-                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+1 port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
+                  {Send PORT add(point 1 POINTTOT)}
+                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
                 elseif {List.member Pos Bonus} then
                   {SendGui hideBonus(Pos)}
                   if ({OS.rand} mod 2) == 0 then
-                    {Send PORT add(bomb 1)}
-                    bdata(id:ID life:LIFE bombs:BOMBS+1 pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+                    {Send PORT add(bomb 1 BOMBSTOT)}
+                    bdata(id:ID life:LIFE bombs:BOMBSTOT pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
                   else
-                    {Send PORT add(point 10)}
-                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+10 port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+                    {Send PORT add(point 10 POINTTOT)}
+                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
                   end
                 else
                   bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
