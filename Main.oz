@@ -255,6 +255,7 @@ in
   in
     {Send Port gotHit(ID Res)}
     {SendPlayers info(deadPlayer(ID))}
+    {SendGui hidePlayer(ID)}
   end
 
   proc{Respawn Port}
@@ -446,55 +447,59 @@ in
       POINTTOT
     in
       case PlayersData#Actions of (bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData)#(Action|TAct) then
-        if{Value.isDet Action} then
-          case Action
-          of move(Pos) then
-            if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {ListInB Bombs Pos}) ) == false then
-              if {List.member Pos Fire} then
-                if LIFE > 1 then
-                  {Die PORT}
-                  {Respawn PORT}
-                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
-                else
-                  {Die PORT}
-                  bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
-                end
-              else
-                {Move ID Pos}
-                if {List.member Pos Points} then
-                  {SendGui hidePoint(Pos)}
-                  {SendGui scoreUpdate(ID SCORE+1)}
-                  {Send PORT add(point 1 POINTTOT)}
-                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
-                elseif {List.member Pos Bonus} then
-                  {SendGui hideBonus(Pos)}
-                  if ({OS.rand} mod 2) == 0 then
-                    {Send PORT add(bomb 1 BOMBSTOT)}
-                    bdata(id:ID life:LIFE bombs:BOMBSTOT pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+        if LIFE < 1 then
+          bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
+        else
+          if{Value.isDet Action} then
+            case Action
+            of move(Pos) then
+              if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {ListInB Bombs Pos}) ) == false then
+                if {List.member Pos Fire} then
+                  if LIFE > 1 then
+                    {Die PORT}
+                    {Respawn PORT}
+                    bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
                   else
-                    {Send PORT add(point 10 POINTTOT)}
-                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+                    {Die PORT}
+                    bdata(id:ID life:LIFE-1 bombs:BOMBS pos:SPAWN spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
                   end
                 else
-                  bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
+                  {Move ID Pos}
+                  if {List.member Pos Points} then
+                    {SendGui hidePoint(Pos)}
+                    {SendGui scoreUpdate(ID SCORE+1)}
+                    {Send PORT add(point 1 POINTTOT)}
+                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
+                  elseif {List.member Pos Bonus} then
+                    {SendGui hideBonus(Pos)}
+                    if ({OS.rand} mod 2) == 0 then
+                      {Send PORT add(bomb 1 BOMBSTOT)}
+                      bdata(id:ID life:LIFE bombs:BOMBSTOT pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+                    else
+                      {Send PORT add(point 10 POINTTOT)}
+                      bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:POINTTOT port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
+                    end
+                  else
+                    bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
+                  end
                 end
+              else
+                bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
               end
-            else
-              bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
-            end
-          [] bomb(Pos) then
-            if Pos == POS andthen BOMBS >= 1 then
-              {PlaceBomb Pos}
-              {Browser.browse RecupBombs}
-              bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus (Pos#TickingBomb)|Bombs Points (ID#TickingBomb)|RecupBombs}
+            [] bomb(Pos) then
+              if Pos == POS andthen BOMBS >= 1 then
+                {PlaceBomb Pos}
+                {Browser.browse RecupBombs}
+                bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus (Pos#TickingBomb)|Bombs Points (ID#TickingBomb)|RecupBombs}
+              else
+                bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
+              end
             else
               bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
             end
           else
             bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
           end
-        else
-          bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
         end
       else
         NewBombs = Bombs
@@ -609,7 +614,7 @@ in
 
       %{Browser.browse 'NRB'#NewRecupBombs}
 
-      {Delay 500}
+      {Delay 1000}
 
       %% Check If Games Continues
 

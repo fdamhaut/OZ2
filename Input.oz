@@ -42,7 +42,7 @@ in
      [1 0 0 3 0 0 0 0 0 0 0 0 1]
      [1 0 0 3 0 0 0 0 0 0 0 0 1]
      [1 0 0 3 0 0 0 0 0 0 0 0 1]
-     [1 0 0 3 0 0 0 0 0 0 0 0 1]
+     [1 0 4 3 0 0 0 0 0 0 0 0 1]
      [1 4 0 3 0 0 0 0 0 0 0 0 1]
      [1 1 1 1 1 1 1 1 1 1 1 1 1]]
    %Map = [[1 1 1 1 1 1 1 1 1 1 1 1 1]
@@ -56,8 +56,8 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player000bomber]
-   ColorBombers = [green]
+   Bombers = [player000bomber player000bomber]
+   ColorBombers = [green red]
 
 %%%% Parameters %%%%
 
