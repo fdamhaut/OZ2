@@ -39,11 +39,11 @@ in
    NbRow = 7
    NbColumn = 13
    Map = [[1 1 1 1 1 1 1 1 1 1 1 1 1]
-     [1 4 0 0 0 0 0 0 0 0 0 4 1]
-     [1 4 0 0 0 0 0 0 0 0 0 4 1]
-     [1 4 0 0 0 0 0 0 0 0 0 4 1]
-     [1 4 0 0 0 0 0 0 0 0 0 4 1]
-     [1 4 0 0 0 0 0 0 0 0 0 4 1]
+     [1 0 0 0 0 0 0 0 0 0 0 0 1]
+     [1 0 1 0 0 0 0 0 0 0 0 0 1]
+     [1 0 1 0 0 0 0 0 0 0 0 0 1]
+     [1 0 1 0 0 0 0 0 0 0 0 0 1]
+     [1 4 1 0 0 0 0 0 0 0 0 0 1]
      [1 1 1 1 1 1 1 1 1 1 1 1 1]]
    %Map = [[1 1 1 1 1 1 1 1 1 1 1 1 1]
 	 % [1 4 0 2 2 2 2 2 2 2 0 4 1]
@@ -56,8 +56,8 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player000bomber player000bomber]
-   ColorBombers = [green red]
+   Bombers = [player000bomber]
+   ColorBombers = [green]
 
 %%%% Parameters %%%%
 

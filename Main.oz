@@ -14,6 +14,8 @@ define
 
   WaitList
   ListRemove
+  ListRemoveB
+  ListInB
 
   ReadMap
   FindMap
@@ -96,19 +98,59 @@ in
 
   fun{ListRemove List Rem}
     fun{ListRemoveIn List Rem Acc}
-      case List of Rem|T then
-        Acc|T
-      [] H|T then
-        {ListRemoveIn T Rem Acc|H}
+      case List of H|T then
+        if H == Rem then
+          Acc|T
+        else
+          {ListRemoveIn T Rem Acc|H}
+        end
       else
         Acc|nil
       end
     end
   in
-    case List of Rem|T then 
-      T
-    [] H|T then
-      {ListRemoveIn T Rem H}
+    case List of H|T then
+      if H == Rem then
+        T
+      else
+        {ListRemoveIn T Rem H}
+      end
+    else
+      nil
+    end
+  end
+
+  fun{ListInB List Pos}
+    case List of (P#Time)|T then
+      if P == Pos then
+        true
+      else
+        {ListInB T Pos}
+      end
+    else
+      false
+    end
+  end
+
+  fun{ListRemoveB List Rem}
+    fun{ListRemoveIn List Rem Acc}
+      case List of (H#Time)|T then
+        if H == Rem then
+          Acc|T
+        else
+          {ListRemoveIn T Rem Acc|(H#Time)}
+        end
+      else
+        Acc|nil
+      end
+    end
+  in
+    case List of (H#Time)|T then
+      if H == Rem then
+        T
+      else
+        {ListRemoveIn T Rem (H#Time)}
+      end
     else
       nil
     end
@@ -215,6 +257,15 @@ in
     {SendPlayers info(deadPlayer(ID))}
   end
 
+  proc{Respawn Port}
+    ID
+    Pos
+  in
+    {Send Port spawn(ID Pos)}
+    {SendPlayers info(spawnPlayer(ID Pos))}
+  end
+
+
 
   %%%%% UTILS : Players
 
@@ -319,7 +370,6 @@ in
         {RemoveBox Pos}
         {SendGui spawnBonus(Pos)}
         NewBonus = Pos|Bonus
-        NewBoxes = {ListRemove Boxes Pos}
         NewPoints = Points
       end
     end
@@ -329,27 +379,22 @@ in
   fun{ExplodeBomb Pos Walls Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
     fun{SpreadFire X Y DeltaX DeltaY Remaining Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
       if {List.member pt(x:X y:Y) Walls} then
-        {Browser.browse 'WALL'}
         NewBoxes = Boxes
         NewBonus = Bonus
         NewBombs = Bombs
         NewPoints = Points
         NewFire
       elseif {List.member pt(x:X y:Y) Boxes} then
-        {Browser.browse 'EXP'}
         {DestroyBox pt(x:X y:Y) Boxes Bonus Points NewBoxes NewBonus NewPoints}
         {SendGui spawnFire(pt(x:X y:Y))}
         NewBombs = Bombs
         pt(x:X y:Y)|NewFire
-      elseif {List.member pt(x:X y:Y)#Time Bombs} then
-        {Browser.browse 'BOOM'}
-        {ExplodeBomb pt(x:X y:Y) Pos|Walls Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints NewFire}
+      elseif {ListInB Bombs pt(x:X y:Y)} then
+        {ExplodeBomb pt(x:X y:Y) Pos|Walls Boxes Bonus {ListRemoveB Bombs Pos} Points NewBoxes NewBonus NewBombs NewPoints NewFire}
       elseif Remaining > 0 then
-        {Browser.browse 'NEXT'}
         {SendGui spawnFire(pt(x:X y:Y))}
         {SpreadFire X+DeltaX Y+DeltaY DeltaX DeltaY Remaining-1 Boxes Bonus Bombs Points NewBoxes NewBonus NewBombs NewPoints pt(x:X y:Y)|NewFire}
       else
-        {Browser.browse 'DONE'}
         {SendGui spawnFire(pt(x:X y:Y))}
         NewBoxes = Boxes
         NewBonus = Bonus
@@ -384,10 +429,11 @@ in
     FireDist = Input.fire
     case Pos of pt(x:X y:Y) then
       {SendGui hideBomb(Pos)}
-      Fire1 = {SpreadFire X Y 1 0 FireDist Boxes Bonus {ListRemove Pos Bombs} Points MidBoxes1 MidBonus1 MidBombs1 MidPoints1 nil}
-      Fire2 = {SpreadFire X Y 0 1 FireDist MidBoxes1 MidBonus1 MidBombs1 MidPoints1 MidBoxes2 MidBonus2 MidBombs2 MidPoints2 Fire1}
-      Fire3 = {SpreadFire X Y ~1 0 FireDist MidBoxes2 MidBonus2 MidBombs2 MidPoints2 MidBoxes3 MidBonus3 MidBombs3 MidPoints3 Fire2}
-      {SpreadFire X Y 0 ~1 FireDist MidBoxes3 MidBonus3 MidBombs3 MidPoints3 NewBoxes NewBonus NewBombs NewPoints Fire3}
+      {SendGui spawnFire(Pos)}
+      Fire1 = {SpreadFire X+1 Y 1 0 FireDist-1 Boxes Bonus Bombs Points MidBoxes1 MidBonus1 MidBombs1 MidPoints1 Pos|NewFire}
+      Fire2 = {SpreadFire X Y+1 0 1 FireDist-1 MidBoxes1 MidBonus1 MidBombs1 MidPoints1 MidBoxes2 MidBonus2 MidBombs2 MidPoints2 Fire1}
+      Fire3 = {SpreadFire X Y-1 0 ~1 FireDist-1 MidBoxes2 MidBonus2 MidBombs2 MidPoints2 MidBoxes3 MidBonus3 MidBombs3 MidPoints3 Fire2}
+      {SpreadFire X-1 Y ~1 0 FireDist-1 MidBoxes3 MidBonus3 MidBombs3 MidPoints3 NewBoxes NewBonus NewBombs NewPoints Fire3}
     else
       nil
     end
@@ -399,7 +445,7 @@ in
         if{Value.isDet Action} then
           case Action
           of move(Pos) then
-            if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {List.member Pos Bombs}) ) == false then
+            if {IsNear Pos POS} andthen ( ({List.member Pos Walls} orelse {List.member Pos Boxes} orelse {ListInB Bombs Pos}) ) == false then
               if {List.member Pos Fire} then
                 if LIFE > 1 then
                   {Die PORT}
@@ -431,10 +477,8 @@ in
               bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
             end
           [] bomb(Pos) then
-            {Browser.browse Pos#POS}
             if Pos == POS andthen BOMBS >= 1 then
               {PlaceBomb Pos}
-              {Browser.browse 'BOOOOOOM'}
               bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus (Pos#TickingBomb)|Bombs Points (ID#TickingBomb)|RecupBombs}
             else
               bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
@@ -454,9 +498,7 @@ in
       end
     end
   in
-
-    {PlayerAction PlayerData Actions Bonus Bombs Points RecupBombs}
-    
+    {PlayerAction PlayerData Actions Bonus Bombs Points RecupBombs}   
   end
 
 
@@ -472,8 +514,7 @@ in
         if Time > TimeByTick then
           {TickBomb Boxes Bonus TBombs (Pos#(Time-TimeByTick))|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
         else
-          MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints NewFire}
-          {Browser.browse MidFire}
+          MidFire = {ExplodeBomb Pos {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints nil}
           {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
         end
       else
@@ -542,7 +583,11 @@ in
 
       {TickBombs Boxes Bonus Bombs Points Walls NewBoxes MidBonus MidBombs MidPoints NewFire}
 
+      {Browser.browse 'RB'#RecupBombs}
+
       MidRecupBombs = {RecuperateBombs RecupBombs PlayersData MidData}
+
+      {Browser.browse 'MRB'#MidRecupBombs}
 
       if Input.isTurnByTurn then
         {WaitList Actions}
@@ -552,15 +597,18 @@ in
 
       NewData = {PlayerActions MidData Actions NewBoxes MidBonus MidBombs MidPoints MidRecupBombs NewBonus NewBombs NewPoints NewFire NewRecupBombs}
 
-      {Delay 5000}
+      {Browser.browse 'NRB'#NewRecupBombs}
+
+      {Delay 1000}
 
       %% Check If Games Continues
 
       {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire NewRecupBombs}
     end
   in
-    {SendGui spawnBomb(pt(x:2 y:2))}
-    {GameLoop PlayersData Boxes nil (pt(x:2 y:2)#3)|nil nil nil nil}
+    {PlaceBomb pt(x:2 y:3)}
+
+    {GameLoop PlayersData Boxes nil (pt(x:2 y:3)#3)|nil nil nil nil}
   end
 
 
