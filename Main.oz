@@ -479,6 +479,7 @@ in
           [] bomb(Pos) then
             if Pos == POS andthen BOMBS >= 1 then
               {PlaceBomb Pos}
+              {Browser.browse RecupBombs}
               bdata(id:ID life:LIFE bombs:BOMBS-1 pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus (Pos#TickingBomb)|Bombs Points (ID#TickingBomb)|RecupBombs}
             else
               bdata(id:ID life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct Bonus Bombs Points RecupBombs}
@@ -532,9 +533,12 @@ in
 
   fun{RecuperateBombs Recup PlayersData NewData}
     fun{AddBomb ID PlayersData}
+      BOMBSTOT
+    in
       case PlayersData of bdata(id:IDB life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|TData then
         if {BEqual ID IDB} then
-          bdata(id:IDB life:LIFE bombs:BOMBS+1 pos:POS spawn:SPAWN score:SCORE port:PORT)|TData
+          {Send PORT add(bomb 1 BOMBSTOT)}
+          bdata(id:IDB life:LIFE bombs:BOMBSTOT pos:POS spawn:SPAWN score:SCORE port:PORT)|TData
         else
           bdata(id:IDB life:LIFE bombs:BOMBS pos:POS spawn:SPAWN score:SCORE port:PORT)|{AddBomb ID TData}
         end
@@ -551,6 +555,7 @@ in
       end
     else
       NewData = PlayersData
+      nil
     end
   end
   %%%%% GameLoop
@@ -583,11 +588,10 @@ in
 
       {TickBombs Boxes Bonus Bombs Points Walls NewBoxes MidBonus MidBombs MidPoints NewFire}
 
-      {Browser.browse 'RB'#RecupBombs}
-
       MidRecupBombs = {RecuperateBombs RecupBombs PlayersData MidData}
 
-      {Browser.browse 'MRB'#MidRecupBombs}
+      {Browser.browse MidRecupBombs}
+      {Browser.browse MidData}
 
       if Input.isTurnByTurn then
         {WaitList Actions}
@@ -597,7 +601,7 @@ in
 
       NewData = {PlayerActions MidData Actions NewBoxes MidBonus MidBombs MidPoints MidRecupBombs NewBonus NewBombs NewPoints NewFire NewRecupBombs}
 
-      {Browser.browse 'NRB'#NewRecupBombs}
+      %{Browser.browse 'NRB'#NewRecupBombs}
 
       {Delay 1000}
 
@@ -606,9 +610,8 @@ in
       {GameLoop NewData NewBoxes NewBonus NewBombs NewPoints NewFire NewRecupBombs}
     end
   in
-    {PlaceBomb pt(x:2 y:3)}
 
-    {GameLoop PlayersData Boxes nil (pt(x:2 y:3)#3)|nil nil nil nil}
+    {GameLoop PlayersData Boxes nil nil nil nil nil}
   end
 
 
