@@ -371,6 +371,7 @@ in
         {SendGui spawnBonus(Pos)}
         NewBonus = Pos|Bonus
         NewPoints = Points
+        NewBoxes = {ListRemove Boxes Pos}
       end
     end
   end
@@ -458,10 +459,12 @@ in
               else
                 {Move ID Pos}
                 if {List.member Pos Points} then
+                  {SendGui hidePoint(Pos)}
                   {SendGui scoreUpdate(ID SCORE+1)}
                   {Send PORT add(point 1)}
                   bdata(id:ID life:LIFE bombs:BOMBS pos:Pos spawn:SPAWN score:SCORE+1 port:PORT)|{PlayerAction TData TAct Bonus Bombs {ListRemove Points Pos} RecupBombs}
                 elseif {List.member Pos Bonus} then
+                  {SendGui hideBonus(Pos)}
                   if ({OS.rand} mod 2) == 0 then
                     {Send PORT add(bomb 1)}
                     bdata(id:ID life:LIFE bombs:BOMBS+1 pos:Pos spawn:SPAWN score:SCORE port:PORT)|{PlayerAction TData TAct {ListRemove Bonus Pos} Bombs Points RecupBombs}
@@ -590,8 +593,8 @@ in
 
       MidRecupBombs = {RecuperateBombs RecupBombs PlayersData MidData}
 
-      {Browser.browse MidRecupBombs}
       {Browser.browse MidData}
+      {Browser.browse MidBonus}
 
       if Input.isTurnByTurn then
         {WaitList Actions}
@@ -603,7 +606,7 @@ in
 
       %{Browser.browse 'NRB'#NewRecupBombs}
 
-      {Delay 1000}
+      {Delay 500}
 
       %% Check If Games Continues
 
