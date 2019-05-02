@@ -3,13 +3,17 @@ import
    QTk at 'x-oz://system/wp/QTk.ozf'
    Input
    Browser
+   System
    Projet2019util
 export
    portWindow:StartWindow
+   entryStream:EntryStream
 define
    
    StartWindow
    TreatStream
+
+   EntryStream
 
    InitPlayer  
    
@@ -31,15 +35,15 @@ define
 
    StateModification
 
-   GridHandle
+   Controller
 
 in
 
 %%%%% Build the initial window and set it up (call only once)
    fun{BuildWindow}
-      Grid GridLife GridScore Toolbar Desc DescLife DescScore Window GridItems
+      Grid GridLife GridScore Toolbar Desc DescLife DescScore Window GridItems Handle EntryPort
    in
-      Toolbar=lr(glue:we tbbutton(text:"Quit" glue:w action:toplevel#close))
+      Toolbar=lr(glue:we tbbutton(text:"Quit" glue:w action:toplevel#close) entry(init:"PC Controler" handle:Handle))
       Desc=grid(handle:Grid height:50*Input.nbRow width:50*Input.nbColumn)
       DescLife=grid(handle:GridLife height:100 width:50*Input.nbBombers)
       DescScore=grid(handle:GridScore height:100 width:50*Input.nbBombers)
@@ -68,7 +72,15 @@ in
       for N in 1..(Input.nbBombers) do
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
-      
+
+      {NewPort EntryStream EntryPort}
+      {Handle bind(event:'<KeyPress>'
+                  args:[atom('K')]
+                  action:proc{$ K}
+                     {System.show 'KeyPress'#K}
+                     {Send EntryPort key(K)}
+                  end
+       )}
 
       {DrawMap Grid}
       GridItems = {PrepareMap Grid}

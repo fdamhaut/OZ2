@@ -29,9 +29,9 @@ in
 
 %%%% Style of game %%%%
    
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
-   PrintOK = true
+   PrintOK = false
 
 
 %%%% Description of the map %%%%
@@ -56,7 +56,7 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player000bomber player000bomber]
+   Bombers = [player000bomber player002PC]
    ColorBombers = [green red]
 
 %%%% Parameters %%%%

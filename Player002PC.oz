@@ -2,6 +2,8 @@ functor
 import
   Input
   Projet2019util
+  GUI
+  System
 export
   portPlayer:StartPlayer
 define   
@@ -28,8 +30,9 @@ in
     {NewPort Stream Port}
     thread
       State = {InitState ID}
-      {TreatStream OutputStream State}
+      {TreatStream OutputStream State GUI.entryStream}
     end
+
     Port
   end
 
@@ -111,15 +114,15 @@ in
   end
 
 
-  proc{TreatStream Stream Data}
-    NewData
+  proc{TreatStream Stream Data EStream}
+    NewData LeftStream
   in
     case Stream
     of nil then
       skip
     [] getId(ID)|T then
       ID = Data.id
-      {TreatStream T Data}
+      {TreatStream T Data EStream}
     [] getState(ID State)|T then
       ID = Data.id
       if Data.life > 0 then
@@ -127,28 +130,28 @@ in
       else
         State = off
       end
-      {TreatStream T Data}
+      {TreatStream T Data EStream}
     [] assignSpawn(Pos)|T then
       {AssignSpawn Data Pos}
-      {TreatStream T Data}
+      {TreatStream T Data EStream}
     [] spawn(ID Pos)|T then
       NewData = {Spawn Data}
       ID = NewData.id
       Pos = NewData.pos
-      {TreatStream T NewData}
+      {TreatStream T NewData EStream}
     []add(Type Option Result)|T then
       NewData = {Add Data Type Option}
       Result = {Get NewData Type}
-      {TreatStream T NewData}
+      {TreatStream T NewData EStream}
     []gotHit(ID Result)|T then
       NewData = {Add Data life ~1}
       ID = NewData.id
       Result = NewData.life
-      {TreatStream T NewData}
+      {TreatStream T NewData EStream}
     []doaction(ID Action)|T then
-      NewData = {GetAction Data Action}
+      NewData = {GetAction Data Action EStream LeftStream}
       ID = NewData.id
-      {TreatStream T NewData}
+      {TreatStream T NewData LeftStream}
     []info(Message)|T then
       case Message
       of movePlayer(ID Pos) then
@@ -157,20 +160,54 @@ in
         else
           NewData = Data
         end
-        {TreatStream T NewData}
+        {TreatStream T NewData EStream}
       else
-        {TreatStream T Data}
+        {TreatStream T Data EStream}
       end
     [] H|T then
-      {TreatStream T NewData}
+      {TreatStream T NewData EStream}
     else 
-      {TreatStream Stream Data}
+      {TreatStream Stream Data EStream}
     end
   end
 
-  fun{GetAction Data Action}
-    Action = move(Data.pos)
-    Data
+  fun{GetAction Data Action EStream NewStream}
+  ID BOMBS LIFE SCORE POS SPAWN X Y 
+  in
+    Data = data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    POS = pt(x:X y:Y)
+    case EStream 
+    of nil then 
+    [] key(w)|T then 
+      {System.show 'GoUp'}
+      Action = move(pt(x:X y:Y-1))
+      NewStream = T
+      Data
+    [] key(a)|T then 
+      {System.show 'GoL'}
+      Action = move(pt(x:X-1 y:Y))
+      NewStream = T
+      Data
+    [] key(s)|T then 
+      {System.show 'GoD'}
+      Action = move(pt(x:X y:Y+1))
+      NewStream = T
+      Data
+    [] key(d)|T then 
+      {System.show 'GoR'}
+      Action = move(pt(x:X+1 y:Y))
+      NewStream = T
+      Data
+    [] key(b)|T then
+      {System.show 'BoomBot'}
+      Action = bomb(POS)
+      NewStream = T
+      {AddBomb Data ~1}
+    [] H|T then
+      {GetAction Data Action T NewStream}
+    else
+      nil
+    end
   end
 
 end
