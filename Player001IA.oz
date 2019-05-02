@@ -11,13 +11,10 @@ define
    InitState
    UpdateState
 
-   FindMap
-   FindType
-   Walls
-
    RemoveList
    IsTouch
    IsTouched
+   EditMap
 
 
    Name = 'AI'
@@ -48,7 +45,7 @@ in
    end
 
    fun{InitState ID}
-      state(id:ID maxBombs:Input.nbBombs activeBombs:0 score:0 life:Input.nbLives spawn:pt(x:0 y:0) boxList:{FindMap 2} bonusList:{FindMap 3} bomberPos:pos() bombList:nil wallList:{FindMap 1})
+      state(id:ID maxBombs:Input.nbBombs activeBombs:0 score:0 life:Input.nbLives spawn:pt(x:0 y:0) map:Input.map bomberPos:pos() bombList:nil )
    end
 
    fun{UpdateState State Field Param}
@@ -65,47 +62,12 @@ in
       end
    end
 
-   fun{FindMap ToFind}
-      fun{Pos Line Y X Acc}
-	      case Line of H|T then
-	         if H == ToFind then
-	            {Pos T Y X+1 pt(x:X y:Y)|Acc}
-	         else
-	            {Pos T Y X+1 Acc}
-	         end
-	      else
-	         Acc
-	      end
-      end
-      fun{Line Map Y Acc}
-	      case Map of H|T then
-	         {Line T Y+1 {Pos H Y 1 nil}|Acc}
-	      else
-	         Acc
-	      end
-      end
-   in
-      {Flatten {Line Input.map 1 nil}}
-   end
-
-   fun{FindType State Pos}
-      if{List.member pt(x:Pos.x y:Pos.y) State.boxList} then
-         2
-      elseif {List.member pt(x:Pos.x y:Pos.y) State.bonusList} then
-         3
-      elseif {List.member pt(x:Pos.x y:Pos.y) State.wallList} then
-         1
-      else
-         0
-      end
-   end
-
    fun{IsTouched State X Y MaxDist To ToRange PX PY}
       case To of H|T then
          case H of to(x:ToX y:ToY) then NewX NewY Status in
 	         NewX = X+(ToX*ToRange)
 	         NewY = Y+(ToY*ToRange)
-            Status = {FindType State pt(x:NewX y:NewY)}
+            Status = {List.nth {List.nth State.map NewY} NewX}
 	         if PX == NewX andthen PY==NewY then
 	            true
 	         elseif Status == 1 orelse Status == 2 orelse Status == 3 then
@@ -132,6 +94,25 @@ in
          []nil then false
          end
       end
+   end
+
+   fun{EditMap Map X Y New}
+      SubList BigList in
+      fun{SubList L X New}
+         if X == 1 then
+            New|L.2
+        else
+            L.1|{SubList L.2 X-1 New}
+        end
+      end
+      fun{BigList L X Y New}
+         if Y==1 then
+            {SubList L.1 X New}|L.2
+         else
+            L.1|{BigList L.2 X Y-1 New}
+         end
+      end
+      {BigList Map X Y New}
    end
 
    fun{AssignSpawn State Pos}
@@ -167,11 +148,7 @@ in
    end
 
    fun{BoxRemoved State Pos}
-      if {List.nth {List.nth Input.map Pos.y} Pos.x} == 2 then %box
-	      {UpdateState State boxList {RemoveList State.boxList Pos}}
-      else %bonus
-	      {UpdateState State bonusList {RemoveList State.bonusList Pos}}
-      end
+      {UpdateState State map {EditMap State.map Pos.x Pos.y 0}}
    end
 
    fun{AddPoint State Option}
