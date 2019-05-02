@@ -714,11 +714,10 @@ in
         {Simu Actions NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
       end
 
-      {Delay 1000}
-
       %% Check If Games Continues
       if Boxes == nil orelse Alive < 2 then
-        {SendGui displayWinner({GetWinner Alive})}
+        %{SendGui displayWinner({GetWinner Alive})}
+        {SendGui displayWinner({GetBestScore PortPlayersID ~1 nil})}
       else
         {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire}
       end
