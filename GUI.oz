@@ -35,7 +35,7 @@ define
 
    StateModification
 
-   Controller
+   Soil = {QTk.newImage photo(url:'img/bottom.png' height:0 width:0)}
 
 in
 
@@ -89,7 +89,7 @@ in
 
    
 %%%%% Squares of path and wall
-   Squares = square(0:label(text:"" width:1 height:1 bg:c(0 0 204))
+   Squares = square(0:label(image:Soil width:1 height:1)
 		    1:label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(0 0 0))
 		    2:label(text:"" width:1 height:1 bg:c(0 0 204))
 		    3:label(text:"" width:1 height:1 bg:c(0 0 204))
