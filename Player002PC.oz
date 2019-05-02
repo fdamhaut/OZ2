@@ -65,7 +65,7 @@ in
 
   fun{AddPoint Data N}
     case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
-      data(id:ID bombs:BOMBS life:LIFE score:SCORE+N pos:SPAWN spawn:SPAWN)
+      data(id:ID bombs:BOMBS life:LIFE score:SCORE+N pos:POS spawn:SPAWN)
     else
       Data
     end
@@ -135,6 +135,7 @@ in
       {AssignSpawn Data Pos}
       {TreatStream T Data EStream}
     [] spawn(ID Pos)|T then
+      {System.show respawnmsg}
       NewData = {Spawn Data}
       ID = NewData.id
       Pos = NewData.pos
@@ -150,7 +151,6 @@ in
       {TreatStream T NewData EStream}
     []doaction(ID Action)|T then
       NewData = {GetAction Data Action EStream LeftStream}
-      {System.show Action}
       ID = NewData.id
       {TreatStream T NewData LeftStream}
     []info(Message)|T then
@@ -166,7 +166,6 @@ in
         {TreatStream T Data EStream}
       end
     [] H|T then
-      {System.show H}
       {TreatStream T NewData EStream}
     else 
       {TreatStream Stream Data EStream}
@@ -178,10 +177,9 @@ in
   in
     Data = data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
     POS = pt(x:X y:Y)
-    {System.show 'Asked'#EStream}
     case EStream 
     of nil then 
-      {System.show 'KAPPALOL'}
+      nil
     [] key(w)|T then 
       {System.show 'GoUp'}
       Action = move(pt(x:X y:Y-1))
@@ -208,7 +206,6 @@ in
       NewStream = T
       {AddBomb Data ~1}
     [] H|T then
-      {System.show 'KAPPA'#H}
       {GetAction Data Action T NewStream}
     else
       nil

@@ -298,6 +298,7 @@ in
     Pos
   in
     {Send Port spawn(ID Pos)}
+    {WaitList [ID Pos]}
     {SendGui spawnPlayer(ID Pos)}
     {SendPlayers info(spawnPlayer(ID Pos))}
   end
@@ -427,6 +428,7 @@ in
     in
       case Ports of HP|TP then
         {Send HP getId(ID)}
+        {Wait ID}
         (HP#ID)|{PID TP}
       else
         nil
@@ -799,18 +801,13 @@ in
       else
         {Simu Actions NewBoxes MidBonus MidBombs MidPoints PosPlayers NewBonus NewBombs NewPoints NewFire MidPosPlayers}
         MidDead = {DeathByFire MidPosPlayers NewFire Dead}
-        if NewFire \= nil then 
-          {System.show 'NF'#NewFire}
-          {System.show 'POS'#MidPosPlayers}
-          {System.show 'MD'#MidDead}
-        end
         NewPosPlayers = {ListRemoveIDs MidPosPlayers MidDead}
         NewActions = {ActionUpdate Alive Actions MidDead NewDead}
         {Delay TimeByTick}
       end
 
       %% Check If Games Continues
-      if Boxes == nil orelse Alive < 2 then
+      if Boxes == nil orelse Alive < 1 then
         {SendGui displayWinner({GetWinner Alive})}
       else
         {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire NewActions NewDead NewPosPlayers}
@@ -834,11 +831,11 @@ in
   Walls = {FindMap 1}
 
   if Input.isTurnByTurn then
-    TickingBomb = Input.timingBomb
+    TickingBomb = Input.timingBomb+1
     TimeByTick = 1
   else
-    TickingBomb = Input.timingBombMin
     TimeByTick = 100
+    TickingBomb = Input.timingBombMin + TimeByTick
   end
 
   {Game}

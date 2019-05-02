@@ -35,7 +35,15 @@ define
 
    StateModification
 
-   Soil = {QTk.newImage photo(url:'img/bottom.png' height:0 width:0)}
+   SoilGIF = {QTk.newImage photo(url:'img/bottom.gif' height:0 width:0)}
+   WallGIF = {QTk.newImage photo(url:'img/wall.gif' height:0 width:0)}
+   SpawnGIF = {QTk.newImage photo(url:'img/spawn.gif' height:0 width:0)}
+   ChestGIF = {QTk.newImage photo(url:'img/chest.gif' height:0 width:0)}
+   StoneGIF = {QTk.newImage photo(url:'img/stone.gif' height:0 width:0)}
+   TntGIF = {QTk.newImage photo(url:'img/tnt.gif' height:0 width:0)}
+   GoldGIF = {QTk.newImage photo(url:'img/gold.gif' height:0 width:0)}
+   DiamGIF = {QTk.newImage photo(url:'img/diamond.gif' height:0 width:0)}
+   FireGIF = {QTk.newImage photo(url:'img/fire.gif' height:0 width:0)}
 
 in
 
@@ -89,18 +97,18 @@ in
 
    
 %%%%% Squares of path and wall
-   Squares = square(0:label(image:Soil width:1 height:1)
-		    1:label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(0 0 0))
-		    2:label(text:"" width:1 height:1 bg:c(0 0 204))
-		    3:label(text:"" width:1 height:1 bg:c(0 0 204))
-		    4:label(text:"" width:1 height:1 bg:c(0 150 150))
+   Squares = square(0:label(image:SoilGIF width:1 height:1)
+		    1:label(image:WallGIF relief:raised width:1 height:1)
+		    2:label(image:SoilGIF width:1 height:1)
+		    3:label(image:SoilGIF width:1 height:1)
+		    4:label(image:SpawnGIF width:1 height:1)
 		   )
-   Items = items(boxpoint:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(139 69 19) handle:Handle) end 
-		 boxbonus:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(210 105 30) handle:Handle) end 
-		 point:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:white) end 
-		 bonus:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:green) end 
-		 bomb:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:black) end 
-		 fire:fun{$ Handle} label(text:"" height:1 width:2 handle:Handle bg:red) end 
+   Items = items(boxpoint:fun{$ Handle} label(image:StoneGIF width:41 height:41 handle:Handle) end 
+		 boxbonus:fun{$ Handle} label(image:ChestGIF width:35 height:35 handle:Handle) end 
+		 point:fun{$ Handle} label(image:GoldGIF height:30 width:30 handle:Handle) end 
+		 bonus:fun{$ Handle} label(image:DiamGIF height:30 width:30 handle:Handle) end 
+		 bomb:fun{$ Handle} label(image:TntGIF height:35 width:35 handle:Handle) end 
+		 fire:fun{$ Handle} label(image:FireGIF height:30 width:30 handle:Handle) end 
 		)
    
 %%%%% Function to draw the map
