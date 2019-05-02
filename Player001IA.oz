@@ -12,6 +12,7 @@ define
    UpdateState
 
    FindMap
+   FindType
    Walls
 
    RemoveList
@@ -87,20 +88,24 @@ in
       {Flatten {Line Input.map 1 nil}}
    end
 
+   fun{FindType State Pos}
+      if{List.member pt(x:Pos.x y:Pos.y) State.boxList} then
+         2
+      elseif {List.member pt(x:Pos.x y:Pos.y) State.bonusList} then
+         3
+      elseif {List.member pt(x:Pos.x y:Pos.y) State.wallList} then
+         1
+      else
+         0
+      end
+   end
+
    fun{IsTouched State X Y MaxDist To ToRange PX PY}
       case To of H|T then
          case H of to(x:ToX y:ToY) then NewX NewY Status in
 	         NewX = X+(ToX*ToRange)
 	         NewY = Y+(ToY*ToRange)
-	         if{List.member pos(x:NewX y:NewY) State.boxList} then
-               Status = 2
-            elseif {List.member pos(x:NewX y:NewY) State.bonusList} then
-               Status = 3
-            elseif {List.member pos(x:NewX y:NewY) State.wallList} then
-               Status = 1
-            else
-               Status = 0
-            end
+            Status = {FindType State pt(x:NewX y:NewY)}
 	         if PX == NewX andthen PY==NewY then
 	            true
 	         elseif Status == 1 orelse Status == 2 orelse Status == 3 then
