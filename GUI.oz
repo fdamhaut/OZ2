@@ -31,6 +31,8 @@ define
 
    StateModification
 
+   GridHandle
+
 in
 
 %%%%% Build the initial window and set it up (call only once)
@@ -42,7 +44,6 @@ in
       DescLife=grid(handle:GridLife height:100 width:50*Input.nbBombers)
       DescScore=grid(handle:GridScore height:100 width:50*Input.nbBombers)
       Window={QTk.build td(Toolbar Desc DescLife DescScore)}
-  
       {Window show}
 
       % configure rows and set headers
@@ -68,6 +69,7 @@ in
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
       
+
       {DrawMap Grid}
       GridItems = {PrepareMap Grid}
       handle(grid:Grid items:GridItems life:GridLife score:GridScore)

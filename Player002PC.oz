@@ -111,12 +111,12 @@ in
   end
 
 
-  fun{TreatStream Stream Data}
+  proc{TreatStream Stream Data}
     NewData
   in
     case Stream
     of nil then
-      nil
+      skip
     [] getId(ID)|T then
       ID = Data.id
       {TreatStream T Data}
