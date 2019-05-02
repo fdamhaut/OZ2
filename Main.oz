@@ -31,6 +31,7 @@ define
   RemoveBox
   Die
   Death
+  DeathByFire
 
   InitPlayers
   GeneratePlayers
@@ -50,6 +51,10 @@ define
   Game
 
   PlayerAction
+  ActionUpdate
+
+  ListRemoveID
+  ListRemoveIDs 
 
 
   % Data
@@ -124,6 +129,26 @@ in
     end
   end
 
+  fun{ListRemoveID List Rem}
+    case List of (POS#ID)|T then
+      if ID == Rem then
+        T
+      else
+        (POS#ID)|{ListRemoveID T Rem }
+      end
+    else
+      nil
+    end
+  end
+
+  fun{ListRemoveIDs List Rem}
+    case Rem of ID|T then
+      {ListRemoveIDs {ListRemoveID List ID} T}
+    else
+      List
+    end
+  end
+
   fun{ListInB List Pos ID}
     case List of (P#Time#BID)|T then
       if P == Pos then
@@ -137,24 +162,13 @@ in
     end
   end
 
+
   fun{ListRemoveB List Rem}
-    fun{ListRemoveIn List Rem Acc}
-      case List of (H#Time#ID)|T then
-        if H == Rem then
-          Acc|T
-        else
-          {ListRemoveIn T Rem Acc|(H#Time#ID)}
-        end
-      else
-        Acc|nil
-      end
-    end
-  in
     case List of (H#Time#ID)|T then
       if H == Rem then
         T
       else
-        {ListRemoveIn T Rem (H#Time#ID)}
+        (H#Time#ID)|{ListRemoveB T Rem}
       end
     else
       nil
@@ -260,6 +274,7 @@ in
     NL
   in
     {Send Port gotHit(ID Res)}
+    {System.show 'DEAD'#ID}
     case Res of death(NL) then
       if NL > 0 then
         {Death ID NL}
@@ -444,6 +459,49 @@ in
     {GetPlayerAction PortPlayers 0}
   end
 
+  fun{ActionUpdate Alive Actions Dead NewDead}
+    fun{ActionUpdateIn AliveIn ActionsIN Dead}
+      Port
+      IDS
+      S
+      NID
+      NACT
+      MidDead
+    in
+      case ActionsIN of action(act:ACT id:ID)|T then
+        if {Value.isDet ACT} andthen {Value.isDet ID} then
+          if {List.member ID Dead} then
+            {Die {GetPort ID}}
+            MidDead = {ListRemove Dead ID}
+          else
+            MidDead = Dead
+          end
+          Port = {GetPort ID}
+          {Send Port getState(IDS S)}
+          if S == on then
+            {Send Port doaction(NID NACT)}
+            action(act:NACT id:NID)|{ActionUpdateIn AliveIn+1 T MidDead}
+          else
+            {ActionUpdateIn AliveIn+1 T MidDead}
+          end
+        else
+          action(act:ACT id:ID)|{ActionUpdateIn AliveIn+1 T Dead}
+        end
+      else
+        Alive = AliveIn
+        NewDead = Dead
+        ActionsIN
+      end
+    end
+  in
+    if Actions == nil then 
+      NewDead = nil
+      {GetActions Alive}
+    else
+      {ActionUpdateIn 0 Actions Dead}
+    end
+  end
+
   fun{BEqual B1 B2}
     case B1#B2 of bomber(id:ID1 color:HColors1 name:N1)#bomber(id:ID2 color:HColors2 name:N2) then
       ID1 == ID2
@@ -558,7 +616,7 @@ in
     end
   end
 
-  proc{PlayerAction Action Boxes Bonus Bombs Points NewBonus NewBombs NewPoints Fire}
+  proc{PlayerAction Action Boxes Bonus Bombs Points PosPlayers NewBonus NewBombs NewPoints Fire NewPosPlayers}
     PORT
     POINTTOT
     BOMBSTOT
@@ -573,11 +631,14 @@ in
             skip
           elseif {List.member Pos Fire} then
             {Die PORT}
+            NewPosPlayers = {ListRemoveID PosPlayers ID}
           else
             {Move ID Pos}
+            NewPosPlayers = (Pos#ID)|{ListRemoveID PosPlayers ID}
             if {List.member Pos Points} then
               {SendGui hidePoint(Pos)}
               {Send PORT add(point 1 POINTTOT)}
+              {Wait POINTTOT}
               {SendGui scoreUpdate(ID POINTTOT)}
               NewPoints = {ListRemove Points Pos}
             elseif {List.member Pos Bonus} then
@@ -587,6 +648,7 @@ in
                 NewBonus = {ListRemove Bonus Pos}
               else
                 {Send PORT add(point 10 POINTTOT)}
+                {Wait POINTTOT}
                 {SendGui scoreUpdate(ID POINTTOT)}
                 NewBonus = {ListRemove Bonus Pos}
               end
@@ -610,20 +672,25 @@ in
     if {Value.isDet NewPoints} == false then
       NewPoints = Points
     end
+    if {Value.isDet NewPosPlayers} == false then
+      NewPosPlayers = PosPlayers
+    end
   end
 
-  proc{Simu Actions Boxes Bonus Bombs Points NewBonus NewBombs NewPoints Fire}
+  proc{Simu Actions Boxes Bonus Bombs Points PosPlayers NewBonus NewBombs NewPoints Fire NewPosPlayers}
     MidBonus
     MidBombs
     MidPoints
+    MidPosPlayers
   in
     case Actions of H|T then
-      {PlayerAction H Boxes Bonus Bombs Points MidBonus MidBombs MidPoints Fire}
-      {Simu T Boxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints Fire}
+      {PlayerAction H Boxes Bonus Bombs Points PosPlayers MidBonus MidBombs MidPoints Fire MidPosPlayers}
+      {Simu T Boxes MidBonus MidBombs MidPoints MidPosPlayers NewBonus NewBombs NewPoints Fire NewPosPlayers}
     else
       NewPoints = Points
       NewBonus = Bonus
       NewBombs = Bombs
+      NewPosPlayers = PosPlayers
     end
   end
 
@@ -635,13 +702,14 @@ in
     S
     ID
     Act
+    TRASH
   in
     case PortPlayer of HP|TP then
       {Send HP getState(IDS S)}
       if S == on then
         {Send HP doaction(ID Act)}
         {WaitList [ID Act]}
-        {PlayerAction action(act:Act id:ID) Boxes Bonus Bombs Points MidBonus MidBombs MidPoints Fire}
+        {PlayerAction action(act:Act id:ID) Boxes Bonus Bombs Points nil MidBonus MidBombs MidPoints Fire TRASH}
         {Tbt TP Boxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints Fire Alive+1}
       else
         {Tbt TP Boxes Bonus Bombs Points NewBonus NewBombs NewPoints Fire Alive}
@@ -651,6 +719,18 @@ in
       NewBombs = Bombs
       NewPoints = Points
       Alive
+    end
+  end
+
+  fun{DeathByFire PosPlayers Fire Dead}
+    case PosPlayers of (POS#ID)|T then
+      if {List.member POS Fire} then
+        ID|{DeathByFire T Fire Dead}
+      else
+        {DeathByFire T Fire Dead}
+      end
+    else
+      Dead
     end
   end
 
@@ -685,8 +765,7 @@ in
   %%%%% GameLoop
 
   proc{Game}
-    proc{GameLoop Boxes Bonus Bombs Points Fire}
-      Actions
+    proc{GameLoop Boxes Bonus Bombs Points Fire Actions Dead PosPlayers}
       Alive
 
       MidBombs
@@ -699,8 +778,14 @@ in
       NewBombs
       NewPoints
       NewFire
+
+      NewActions
+      MidDead
+      NewDead
+
+      MidPosPlayers
+      NewPosPlayers
     in
-      {Browser.browse 'NewTurn'}
     
       {RemoveAllFire Fire}
 
@@ -708,22 +793,31 @@ in
 
       if Input.isTurnByTurn then
         Alive = {Tbt PortPlayers NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire 0}
+        NewActions = nil
+        NewPosPlayers = nil
+        NewDead = nil
       else
-        Actions = {GetActions Alive}
-        {Delay Input.thinkMin}
-        {WaitActions Actions}
-        {Simu Actions NewBoxes MidBonus MidBombs MidPoints NewBonus NewBombs NewPoints NewFire}
+        {Simu Actions NewBoxes MidBonus MidBombs MidPoints PosPlayers NewBonus NewBombs NewPoints NewFire MidPosPlayers}
+        MidDead = {DeathByFire MidPosPlayers NewFire Dead}
+        if NewFire \= nil then 
+          {System.show 'NF'#NewFire}
+          {System.show 'POS'#MidPosPlayers}
+          {System.show 'MD'#MidDead}
+        end
+        NewPosPlayers = {ListRemoveIDs MidPosPlayers MidDead}
+        NewActions = {ActionUpdate Alive Actions MidDead NewDead}
+        {Delay TimeByTick}
       end
 
       %% Check If Games Continues
       if Boxes == nil orelse Alive < 2 then
         {SendGui displayWinner({GetWinner Alive})}
       else
-        {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire}
+        {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire NewActions NewDead NewPosPlayers}
       end
     end
   in
-    {GameLoop Boxes nil nil nil nil }
+    {GameLoop Boxes nil nil nil nil nil nil nil}
   end
 
 
@@ -744,7 +838,7 @@ in
     TimeByTick = 1
   else
     TickingBomb = Input.timingBombMin
-    TimeByTick = Input.thinkMin
+    TimeByTick = 100
   end
 
   {Game}
