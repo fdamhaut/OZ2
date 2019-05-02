@@ -342,6 +342,7 @@ in
     end
 
   in
+
     if Alive == 0 then
       {GetBestScore PortPlayersID ~1 nil}
     elseif Alive == 1 then
@@ -716,8 +717,7 @@ in
 
       %% Check If Games Continues
       if Boxes == nil orelse Alive < 2 then
-        %{SendGui displayWinner({GetWinner Alive})}
-        {SendGui displayWinner({GetBestScore PortPlayersID ~1 nil})}
+        {SendGui displayWinner({GetWinner Alive})}
       else
         {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire}
       end

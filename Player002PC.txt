@@ -6,26 +6,18 @@ export
   portPlayer:StartPlayer
 define   
   StartPlayer
-  TreatStream
   InitState
-  UpdateState
-  FindMap
-  Walls
-
-  RemoveList
-
-  Name = 'AI'
   AssignSpawn
   Spawn
-  GotHit
   AddBomb
   AddPoint
-  SpawnPlayer
-  MovePlayer
-  DeadPlayer
-  BombPlanted
-  BombExploded
-  BoxRemoved
+  Move
+  AddLife
+  Add
+  Get
+  TreatStream
+  GetAction
+
 in
   fun{StartPlayer ID}
     Stream Port OutputStream State
@@ -53,7 +45,7 @@ in
   end
 
   fun{Spawn Data}
-    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
       data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:SPAWN spawn:SPAWN)
     else
       Data
@@ -61,7 +53,7 @@ in
   end
 
   fun{AddBomb Data N}
-    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
       data(id:ID bombs:BOMBS+N life:LIFE score:SCORE pos:POS spawn:SPAWN)
     else
       Data
@@ -69,7 +61,7 @@ in
   end
 
   fun{AddPoint Data N}
-    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
       data(id:ID bombs:BOMBS life:LIFE score:SCORE+N pos:SPAWN spawn:SPAWN)
     else
       Data
@@ -77,15 +69,15 @@ in
   end
 
   fun{Move Data P}
-    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
       data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:P spawn:SPAWN)
     else
       Data
     end
   end
 
-  fun{AddLife N}
-    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+  fun{AddLife Data N}
+    case Data of data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN) then
       data(id:ID bombs:BOMBS life:LIFE+N score:SCORE pos:POS spawn:SPAWN)
     else
       Data
@@ -124,13 +116,13 @@ in
   in
     case Stream
     of nil then
-      skip
+      nil
     [] getId(ID)|T then
       ID = Data.id
       {TreatStream T Data}
     [] getState(ID State)|T then
       ID = Data.id
-      if Data.life > 0
+      if Data.life > 0 then
         State = on
       else
         State = off
@@ -159,7 +151,7 @@ in
       {TreatStream T NewData}
     []info(Message)|T then
       case Message
-      of MovePlayer(ID Pos) then
+      of movePlayer(ID Pos) then
         if ID == Data.id then
           NewData = {Move Data Pos}
         else
@@ -171,9 +163,14 @@ in
       end
     [] H|T then
       {TreatStream T NewData}
-    else skip
+    else 
+      {TreatStream Stream Data}
     end
   end
 
   fun{GetAction Data Action}
-    if Data.bombs > 0 andthen 
+    Action = move(Data.pos)
+    Data
+  end
+
+end
