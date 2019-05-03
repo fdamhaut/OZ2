@@ -4,8 +4,8 @@
 # 0045-16-00 : DAMHAUT FLORIAN
 # ----------------------------
 
-SRC = GUI.oz Main.oz Player096Player1.oz Player096Player2.oz Player096Rnd.oz PlayerManager.oz
-PLAYER = Player096Player1.oz Player096Player2.oz Player096Rnd.oz
+SRC = GUI.oz Main.oz Player096Player1.oz Player096Player2.oz Player096Rnd.oz PlayerManager.oz Player096IA.oz
+PLAYER = Player096Player1.oz Player096Player2.oz Player096Rnd.oz Player096IA.oz
 all :compile run
 
 compile :

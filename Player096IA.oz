@@ -78,6 +78,18 @@ in
     {RemoveBP MidData1 P}
   end
 
+  fun{ListRemove List Rem}
+    case List of H|T then
+      if H == Rem then
+        T
+      else
+        H|{ListRemove T Rem }
+      end
+    else
+      nil
+    end
+  end
+
   fun{RemoveBP Data P}
     MidData1
   in 
@@ -130,7 +142,6 @@ in
   proc{TreatStream Stream Data}
     NewData
   in
-    {System.show Stream}
     case Stream
     of nil then
       skip
@@ -163,10 +174,10 @@ in
       Result = death(NewData.life)
       {TreatStream T NewData}
     []doaction(ID Action)|T then
-      {System.show asked}
       NewData = {GetAction Data Action}
-      {System.show Action}
-      {System.show NewData.nextAct}
+      {System.show pos#NewData.pos}
+      {System.show action#Action}
+      {System.show next#NewData.nextAct}
       ID = NewData.id
       {TreatStream T NewData}
     []info(Message)|T then
@@ -191,7 +202,7 @@ in
         {TreatStream T Data}
       end
     [] H|T then
-      {TreatStream T NewData}
+      {TreatStream T Data}
     else 
       {TreatStream Stream Data}
     end
@@ -203,9 +214,10 @@ in
     Mur
     DZone
     FD X Y
+    NewData
   in
     case Data.nextAct of H|T then 
-      Action = H
+      Action = move(H)
       {System.show Action}
       {AdjoinAt Data nextAct T}
     else
@@ -214,34 +226,33 @@ in
       Mur = {Append Data.walls DZone}
       BBonus = {Closest Data.bonus Data.pos Mur}
       if BBonus \=nil then 
-        Action = movePlayer(BBonus.1)
+        Action = move(BBonus.1)
         Data
       
       else 
         {System.show nbb}
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
-          Action = movePlayer(BPoints.1)
+          Action = move(BPoints.1)
           Data
 
         else
-          {System.show nbp}
-          if Data.nbombs > 0 then
+          if Data.nbombs > 0 andthen {OS.rand} mod 3 < 2 then
             Action = bomb(Data.pos)
-            {AdjoinAt Data nextAct {Safety Data.pos {DangerZone {Append [Data.pos] Data.bombs} Data.walls Data.boxes} {Append Data.walls Data.boxes}}}
+            NewData = {AdjoinAt Data nbombs Data.nbombs-1}
+            {AdjoinAt NewData nextAct {Safety Data.pos {DangerZone {Append [Data.pos] Data.bombs} Data.walls Data.boxes} {Append Data.walls Data.boxes}}}
           else
-            {System.show nnb}
             FD = {OS.rand} mod 4
             Data.pos = pt(x:X y:Y)
 
             if FD == 0 then
-              Action = movePlayer(pt(x:X+1 y:Y))
+              Action = move(pt(x:X+1 y:Y))
             elseif FD == 1 then
-              Action = movePlayer(pt(x:X-1 y:Y))
+              Action = move(pt(x:X-1 y:Y))
             elseif FD == 2 then
-              Action = movePlayer(pt(x:X y:Y+1))
+              Action = move(pt(x:X y:Y+1))
             else
-              Action = movePlayer(pt(x:X y:Y-1))
+              Action = move(pt(x:X y:Y-1))
             end
             Data
           end
@@ -365,22 +376,31 @@ in
 
 
   fun{Closest Items Pos Walls}
+    Out
     fun{ClosestIn Items Long Best}
       B
     in
+
       case Items of H|T then
         B = {BFS Pos H Walls}
-        if B == nil orelse {List.Length B} >= Long then
-          {ClosestIn Items Long Best}
+        if B == nil orelse {List.length B} >= Long then
+          {ClosestIn T Long Best}
         else
-          {ClosestIn Items {List.Length B} B}
+          {ClosestIn T {List.length B} B}
         end
       else
         Best
       end
     end
   in
-    {ClosestIn Items 99 nil}
+    {System.show Items#Pos#Walls}
+
+    Out = {ClosestIn Items 99 nil}
+    case Out of H|T then
+      T
+    else
+      Out
+    end
   end
 
   fun{Safety Start Dangerzone Walls}
