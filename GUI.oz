@@ -90,13 +90,14 @@ in
                   args:[atom('K')]
                   action:proc{$ K}
                      if {List.member K Input.keyPlayer1} then
-                        {System.show sendP1#K}
+                        %{System.show sendP1#K}
                         {Send EntryPortP1 key(K)}
                      elseif {List.member K Input.keyPlayer2} then
-                        {System.show sendP2#K}
+                        %{System.show sendP2#K}
                         {Send EntryPortP2 key(K)}
                      else
-                        {System.show keyNotRecognised#K}
+                        %{System.show keyNotRecognised#K}
+                        skip
                      end
                   end
        )}

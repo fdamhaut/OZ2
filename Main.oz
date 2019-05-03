@@ -107,7 +107,7 @@ in
   end
 
   proc{WaitActions List}
-    case List of action(act:ACT id:ID)|T then
+    case List of action(act:ACT id:_)|T then
       {Wait ACT}
       {WaitActions T}
     else
@@ -148,7 +148,7 @@ in
   end
 
   fun{ListInB List Pos ID}
-    case List of (P#Time#BID)|T then
+    case List of (P#_#BID)|T then
       if P == Pos then
         ID = BID
         true
@@ -264,14 +264,13 @@ in
     NL
   in
     {Send Port gotHit(ID Res)}
-    {System.show 'DEAD'#ID}
     {WaitList [Res ID]}
     case Res of death(NL) then
       if NL > 0 then
         {Death ID NL}
         {Respawn Port}
       else
-        {Death ID 0}
+        {Death ID NL}
       end
     else
       {Death ID 0}
@@ -315,7 +314,7 @@ in
       IDS
       S
     in
-      case PortID of (HP#ID)|T then
+      case PortID of (HP#_)|T then
         {Send HP getState(IDS S)}
         if S == on then
           IDS
@@ -332,7 +331,7 @@ in
       S
       Res
     in
-      case PortID of (HP#ID)|T then
+      case PortID of (HP#_)|T then
         {Send HP getState(IDS S)}
         if S == on then
           {Send HP add(point 0 Res)}
@@ -759,7 +758,6 @@ in
       MidPoints
       MidBonus
 
-      NewPos
       NewBoxes
       NewBonus
       NewBombs

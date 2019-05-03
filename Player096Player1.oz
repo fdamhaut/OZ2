@@ -136,7 +136,6 @@ in
       {AssignSpawn Data Pos}
       {TreatStream T Data EStream}
     [] spawn(ID Pos)|T then
-      {System.show respawnmsg}
       NewData = {Spawn Data}
       ID = NewData.id
       Pos = NewData.pos
@@ -174,10 +173,10 @@ in
   end
 
   fun{GetAction Data Action EStream NewStream}
-  ID BOMBS LIFE SCORE POS SPAWN X Y
+  BOMBS POS X Y
   UP DO LE RI BO
   in
-    Data = data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
+    Data = data(id:_ bombs:BOMBS life:_ score:_ pos:POS spawn:_)
     POS = pt(x:X y:Y)
     UP = Input.player1KeyUp
     {System.show UP}
