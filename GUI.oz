@@ -47,6 +47,14 @@ define
    DiamGIF = {QTk.newImage photo(url:'img/diamond.gif' height:0 width:0)}
    FireGIF = {QTk.newImage photo(url:'img/fire.gif' height:0 width:0)}
 
+   LifeGIF = {QTk.newImage photo(url:'img/life.gif' height:0 width:0)}
+   ScoreGIF = {QTk.newImage photo(url:'img/score.gif' height:0 width:0)}
+
+   SheepGIF = {QTk.newImage photo(url:'img/cwhite.gif' height:0 width:0)}
+   CreeperGIF = {QTk.newImage photo(url:'img/creeper.gif' height:0 width:0)}
+   PigGIF = {QTk.newImage photo(url:'img/pig.gif' height:0 width:0)}
+   EndermanGIF = {QTk.newImage photo(url:'img/enderman.gif' height:0 width:0)}
+
 in
 
 %%%%% Build the initial window and set it up (call only once)
@@ -71,14 +79,14 @@ in
       % configure lifeboard
       {GridLife rowconfigure(1 minsize:50 weight:0 pad:5)}
       {GridLife columnconfigure(1 minsize:50 weight:0 pad:5)}
-      {GridLife configure(label(text:"life" width:1 height:1) row:1 column:1 sticky:wesn)}
+      {GridLife configure(label(image:LifeGIF width:2 height:2) row:1 column:1 sticky:wesn)}
       for N in 1..(Input.nbBombers) do
 	 {GridLife columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
       % configure scoreboard
       {GridScore rowconfigure(1 minsize:50 weight:0 pad:5)}
       {GridScore columnconfigure(1 minsize:50 weight:0 pad:5)}
-      {GridScore configure(label(text:"score" width:1 height:1) row:1 column:1 sticky:wesn)}
+      {GridScore configure(label(image:ScoreGIF width:1 height:1) row:1 column:1 sticky:wesn)}
       for N in 1..(Input.nbBombers) do
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
@@ -206,7 +214,17 @@ in
       Handle HandleLife HandleScore Id Color LabelPlayer LabelLife LabelScore
    in
       bomber(id:Id color:Color name:_) = ID
-      LabelPlayer = label(text:"P" handle:Handle borderwidth:5 relief:raised bg:Color ipadx:5 ipady:5)
+      if Color == grey then 
+         LabelPlayer = label(image:SheepGIF handle:Handle height:30 width:30 borderwidth:0 relief:raised ipadx:5 ipady:5)
+      elseif Color == green then
+         LabelPlayer = label(image:CreeperGIF handle:Handle height:30 width:30 borderwidth:0 relief:raised ipadx:5 ipady:5)
+      elseif Color == red then
+         LabelPlayer = label(image:PigGIF handle:Handle height:30 width:30 borderwidth:0 relief:raised ipadx:5 ipady:5)
+      elseif Color == black then
+         LabelPlayer = label(image:EndermanGIF handle:Handle height:30 width:30 borderwidth:0 relief:raised ipadx:5 ipady:5)
+      else
+         LabelPlayer = label(text:"P" handle:Handle borderwidth:5 relief:raised bg:Color ipadx:5 ipady:5)
+      end
       LabelLife = label(text:Input.nbLives borderwidth:5 handle:HandleLife relief:solid bg:Color ipadx:5 ipady:5)
       LabelScore = label(text:0 borderwidth:5 handle:HandleScore relief:solid bg:Color ipadx:5 ipady:5)
       {Grid.grid configure(LabelPlayer row:0 column:0 sticky:wesn)}

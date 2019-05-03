@@ -1,22 +1,39 @@
 # ----------------------------
 # group nb XXX
 # 3613-16-00 : LOUCHEUR BENOÎT
-# noma2 : DAMHAUT FLORIAN
+# 0045-16-00 : DAMHAUT FLORIAN
 # ----------------------------
 
-all :compile start
+SRC = GUI.oz Main.oz Player096Player1.oz Player096Player2.oz Player096Rnd.oz PlayerManager.oz
+PLAYER = Player096Player1.oz Player096Player2.oz Player096Rnd.oz
+all :compile run
 
 compile :
-	@ozc -c *.oz
+	@ozc -c $(SRC)
 
 compilePlayer :
-	@ozc -c Player000name.ozf
-
-Input:
-	@ozc -c Input.oz
+	@ozc -c $(PLAYER)
 	
-start :
+GUI.ozf:
+	@ozc -c GUI.ozf
+
+Input.ozf:
+	@ozc -c Input.ozf
+	
+Main.ozf:
+	@ozc -c Main.ozf
+	
+Player096Player1.ozf:
+	@ozc -c Player096Player1.ozf
+
+Player096Player2.ozf:
+	@ozc -c Player096Player2.ozf
+	
+PlayerManager.ozf:
+	@ozc -c PlayerManager.ozf
+	
+run :
 	@ozengine Main.ozf
 
 clean :
-	@del -rf GUI.ozf Input.ozf Main.ozf PlayerManager.ozf Player000name.ozf
+	@del -rf Input.ozf $(SRC)
