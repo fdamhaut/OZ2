@@ -22,7 +22,6 @@ define
   ReadMap
   FindMap
   IsNear
-  PosEqual
 
   RemoveAllFire
   PlaceBomb
@@ -38,7 +37,6 @@ define
   SpawnPlayers
   GetActions
   Respawn
-  BEqual
   GetPort
   GetWinner
 
@@ -229,14 +227,6 @@ in
     end
   end
 
-  fun{PosEqual Pos1 Pos2}
-    case Pos1#Pos2 of pt(x:X1 y:Y1)#pt(x:X2 y:Y2) then
-      X1 == X2 andthen Y1 == Y2
-    else
-      false
-    end
-  end
-
   %%%%% UTILS : MapEvents & Mandatory Messages to Players
 
   proc{RemoveAllFire Pos}
@@ -275,6 +265,7 @@ in
   in
     {Send Port gotHit(ID Res)}
     {System.show 'DEAD'#ID}
+    {WaitList [Res ID]}
     case Res of death(NL) then
       if NL > 0 then
         {Death ID NL}
@@ -300,6 +291,7 @@ in
     {Send Port spawn(ID Pos)}
     {WaitList [ID Pos]}
     {SendGui spawnPlayer(ID Pos)}
+    {SendGui movePlayer(ID Pos)}
     {SendPlayers info(spawnPlayer(ID Pos))}
   end
 
@@ -358,8 +350,9 @@ in
     end
 
   in
-
-    if Alive == 0 then
+    if Input.useExtention == false then
+      {GetBestScore PortPlayersID ~1 nil}
+    elseif Alive == 0 then
       {GetBestScore PortPlayersID ~1 nil}
     elseif Alive == 1 then
       {GetAlive PortPlayersID}
@@ -504,14 +497,6 @@ in
     end
   end
 
-  fun{BEqual B1 B2}
-    case B1#B2 of bomber(id:ID1 color:HColors1 name:N1)#bomber(id:ID2 color:HColors2 name:N2) then
-      ID1 == ID2
-    else
-      false
-    end
-  end
-
   fun{GetPort ID}
     fun{GetPortIN PID}
       case PID of (P#IDP)|TPID then
@@ -607,7 +592,7 @@ in
     FireDist = Input.fire
     case Pos of pt(x:X y:Y) then
       {Send {GetPort ID} add(bomb 1 Res)}
-      {SendGui hideBomb(Pos)}
+      {RemoveBomb Pos}
       {SendGui spawnFire(Pos)}
       Fire1 = {SpreadFire X+1 Y 1 0 FireDist-1 Boxes Bonus Bombs Points MidBoxes1 MidBonus1 MidBombs1 MidPoints1 Pos|NewFire}
       Fire2 = {SpreadFire X Y+1 0 1 FireDist-1 MidBoxes1 MidBonus1 MidBombs1 MidPoints1 MidBoxes2 MidBonus2 MidBombs2 MidPoints2 Fire1}
@@ -807,7 +792,7 @@ in
       end
 
       %% Check If Games Continues
-      if Boxes == nil orelse Alive < 1 then
+      if Boxes == nil orelse Alive < 2 then
         {SendGui displayWinner({GetWinner Alive})}
       else
         {GameLoop NewBoxes NewBonus NewBombs NewPoints NewFire NewActions NewDead NewPosPlayers}

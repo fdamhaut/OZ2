@@ -7,13 +7,15 @@ import
    Projet2019util
 export
    portWindow:StartWindow
-   entryStream:EntryStream
+   entryStreamP1:EntryStreamP1
+   entryStreamP2:EntryStreamP2
 define
    
    StartWindow
    TreatStream
 
-   EntryStream
+   EntryStreamP1
+   EntryStreamP2
 
    InitPlayer  
    
@@ -49,7 +51,7 @@ in
 
 %%%%% Build the initial window and set it up (call only once)
    fun{BuildWindow}
-      Grid GridLife GridScore Toolbar Desc DescLife DescScore Window GridItems Handle EntryPort
+      Grid GridLife GridScore Toolbar Desc DescLife DescScore Window GridItems Handle EntryPortP1 EntryPortP2
    in
       Toolbar=lr(glue:we tbbutton(text:"Quit" glue:w action:toplevel#close) entry(init:"PC Controler" handle:Handle))
       Desc=grid(handle:Grid height:50*Input.nbRow width:50*Input.nbColumn)
@@ -81,12 +83,21 @@ in
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
 
-      {NewPort EntryStream EntryPort}
+      {NewPort EntryStreamP1 EntryPortP1}
+      {NewPort EntryStreamP2 EntryPortP2}
+
       {Handle bind(event:'<KeyPress>'
                   args:[atom('K')]
                   action:proc{$ K}
-                     {System.show 'KeyPress'#K}
-                     {Send EntryPort key(K)}
+                     if {List.member K Input.keyPlayer1} then
+                        {System.show sendP1#K}
+                        {Send EntryPortP1 key(K)}
+                     elseif {List.member K Input.keyPlayer2} then
+                        {System.show sendP2#K}
+                        {Send EntryPortP2 key(K)}
+                     else
+                        {System.show keyNotRecognised#K}
+                     end
                   end
        )}
 

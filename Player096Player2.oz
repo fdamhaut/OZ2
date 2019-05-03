@@ -30,7 +30,7 @@ in
     {NewPort Stream Port}
     thread
       State = {InitState ID}
-      {TreatStream OutputStream State GUI.entryStream}
+      {TreatStream OutputStream State GUI.entryStreamP2}
     end
 
     Port
@@ -147,7 +147,7 @@ in
     []gotHit(ID Result)|T then
       NewData = {Add Data life ~1}
       ID = NewData.id
-      Result = NewData.life
+      Result = death(NewData.life)
       {TreatStream T NewData EStream}
     []doaction(ID Action)|T then
       NewData = {GetAction Data Action EStream LeftStream}
@@ -173,38 +173,50 @@ in
   end
 
   fun{GetAction Data Action EStream NewStream}
-  ID BOMBS LIFE SCORE POS SPAWN X Y 
+  ID BOMBS LIFE SCORE POS SPAWN X Y
+  UP DO LE RI BO
   in
     Data = data(id:ID bombs:BOMBS life:LIFE score:SCORE pos:POS spawn:SPAWN)
     POS = pt(x:X y:Y)
+    UP = Input.player2KeyUp
+    {System.show UP}
+    DO = Input.player2KeyDown
+    LE = Input.player2KeyLeft
+    RI = Input.player2KeyRight
+    BO = Input.player2KeyBomb
     case EStream 
     of nil then 
       nil
-    [] key(w)|T then 
-      {System.show 'GoUp'}
-      Action = move(pt(x:X y:Y-1))
-      NewStream = T
-      Data
-    [] key(a)|T then 
-      {System.show 'GoL'}
+    [] key(KEY)|T then  
+      if KEY == UP then
+        {System.show 'P2GoUp'}
+        Action = move(pt(x:X y:Y-1))
+        NewStream = T
+        Data
+      elseif KEY == LE then 
+      {System.show 'P2GoL'}
       Action = move(pt(x:X-1 y:Y))
       NewStream = T
       Data
-    [] key(s)|T then 
-      {System.show 'GoD'}
+      elseif KEY == DO then
+      {System.show 'P2GoD'}
       Action = move(pt(x:X y:Y+1))
       NewStream = T
       Data
-    [] key(d)|T then 
-      {System.show 'GoR'}
+      elseif KEY == RI then
+      {System.show 'P2GoR'}
       Action = move(pt(x:X+1 y:Y))
       NewStream = T
       Data
-    [] key(b)|T then
-      {System.show 'BoomBot'}
+      elseif KEY == BO andthen BOMBS > 0 then
+      {System.show 'P2BoomBot'}
       Action = bomb(POS)
       NewStream = T
       {AddBomb Data ~1}
+      else
+        {GetAction Data Action T NewStream}
+      end
+
     [] H|T then
       {GetAction Data Action T NewStream}
     else
