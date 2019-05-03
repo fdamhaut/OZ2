@@ -175,9 +175,6 @@ in
       {TreatStream T NewData}
     []doaction(ID Action)|T then
       NewData = {GetAction Data Action}
-      {System.show pos#NewData.pos}
-      {System.show action#Action}
-      {System.show next#NewData.nextAct}
       ID = NewData.id
       {TreatStream T NewData}
     []info(Message)|T then
@@ -216,12 +213,13 @@ in
     FD X Y
     NewData
   in
+    if Input.isTurnByTurn == false then
+      {Delay Input.thinkMin}
+    end
     case Data.nextAct of H|T then 
       Action = move(H)
-      {System.show Action}
       {AdjoinAt Data nextAct T}
     else
-      {System.show nnact}
       DZone = {DangerZone Data.bombs Data.walls Data.boxes}
       Mur = {Append Data.walls DZone}
       BBonus = {Closest Data.bonus Data.pos Mur}
@@ -230,7 +228,6 @@ in
         Data
       
       else 
-        {System.show nbb}
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
           Action = move(BPoints.1)
@@ -393,7 +390,6 @@ in
       end
     end
   in
-    {System.show Items#Pos#Walls}
 
     Out = {ClosestIn Items 99 nil}
     case Out of H|T then
