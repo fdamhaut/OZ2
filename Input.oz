@@ -57,7 +57,7 @@ in
 
 %%%% Style of game %%%%
    
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
    PrintOK = false
 
@@ -84,7 +84,7 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player096Player2 player096Player1]
+   Bombers = [player096IA player096Player1]
    ColorBombers = [green red]
 
 %%%% Parameters %%%%
