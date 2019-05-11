@@ -781,6 +781,7 @@ in
         NewActions = nil
         NewPosPlayers = nil
         NewDead = nil
+        {Delay 150}
       else
         {Simu Actions NewBoxes MidBonus MidBombs MidPoints PosPlayers NewBonus NewBombs NewPoints NewFire MidPosPlayers}
         MidDead = {DeathByFire MidPosPlayers NewFire Dead}
@@ -817,7 +818,7 @@ in
     TickingBomb = Input.timingBomb+1
     TimeByTick = 1
   else
-    TimeByTick = 100
+    TimeByTick = 150
     TickingBomb = Input.timingBombMin + TimeByTick
   end
 

@@ -5,6 +5,7 @@ import
    Player096Player2
    Player096Rnd
    Player096IA
+   Player096IAEvolved
    %% Add here the name of the functor of a player
    %% Player000name
 export
@@ -21,6 +22,7 @@ in
       [] player096Player2 then {Player096Player2.portPlayer ID}
       [] player096Rnd then {Player096Rnd.portPlayer ID}
       [] player096IA then {Player096IA.portPlayer ID}
+      [] player096IAEvolved then {Player096IAEvolved.portPlayer ID}
       else
          raise 
             unknownedPlayer('Player not recognized by the PlayerManager '#Kind)

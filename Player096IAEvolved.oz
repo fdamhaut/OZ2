@@ -216,6 +216,7 @@ in
   in
     if Input.isTurnByTurn == false then
       {Delay Input.thinkMin}
+      {System.show waited}
     end
     case Data.nextAct of H|T then 
       Action = move(H)
@@ -225,14 +226,11 @@ in
       Mur = {Append {Append Data.walls DZone} Data.boxes}
       BBonus = {Closest Data.bonus Data.pos Mur}
       if BBonus \=nil then 
-        {System.show bb}
         Action = move(BBonus.1)
         Data
       else 
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
-          {System.show bp#BPoints}
-          {System.show {List.member BPoints.1 Mur}}
           Action = move(BPoints.1)
           Data
         else
