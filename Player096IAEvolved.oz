@@ -52,7 +52,7 @@ in
     SPAWN
     POS
   in
-    data(id:ID nextAct:nil nbombs:Input.nbBombs life:Input.nbLives score:0 pos:POS spawn:SPAWN walls:{FindMap 1} boxes:{Flatten {FindMap 2}|{FindMap 3}} bonus:nil points:nil bombs:nil)
+    data(id:ID nextAct:nil nbombs:Input.nbBombs life:Input.nbLives score:0 pos:POS spawn:SPAWN walls:{FindMap 1} boxes:{Flatten {FindMap 2}|{FindMap 3}} bonus:nil points:nil bombs:nil fire:nil)
   end
 
   proc{AssignSpawn Data Spawn}
@@ -174,7 +174,8 @@ in
       Result = death(NewData.life)
       {TreatStream T NewData}
     []doaction(ID Action)|T then
-      NewData = {GetAction Data Action}
+      NewData = {AdjoinAt {GetAction Data Action} fire nil}
+      {System.show NewData.pos#Action}
       ID = NewData.id
       {TreatStream T NewData}
     []info(Message)|T then
@@ -190,7 +191,7 @@ in
         NewData = {AdjoinAt Data bombs {Append Data.bombs [Pos]}}
         {TreatStream T NewData}
       [] bombExploded(Pos) then
-        NewData = {AdjoinAt Data bombs {ListRemove Data.bombs Pos}}
+        NewData = {AdjoinAt {AdjoinAt Data bombs {ListRemove Data.bombs Pos}} fire Pos|Data.fire}
         {TreatStream T NewData}
       []boxRemoved(Pos) then
         NewData = {BoxRem Data Pos}
@@ -220,26 +221,28 @@ in
       Action = move(H)
       {AdjoinAt Data nextAct T}
     else
-      DZone = {DangerZone Data.bombs Data.walls Data.boxes}
+      DZone = {DangerZone {Append Data.fire Data.bombs} Data.walls Data.boxes}
       Mur = {Append {Append Data.walls DZone} Data.boxes}
       BBonus = {Closest Data.bonus Data.pos Mur}
       if BBonus \=nil then 
+        {System.show bb}
         Action = move(BBonus.1)
         Data
-      
       else 
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
+          {System.show bp#BPoints}
+          {System.show {List.member BPoints.1 Mur}}
           Action = move(BPoints.1)
           Data
-
         else
-          if Data.nbombs > 0 andthen {OS.rand} mod 3 < 2 then
+          if Data.nbombs > 0 then %andthen {OS.rand} mod 3 < 2 then
             Action = bomb(Data.pos)
             NewData = {AdjoinAt Data nbombs Data.nbombs-1}
             {AdjoinAt NewData nextAct {Safety Data.pos {DangerZone {Append [Data.pos] Data.bombs} Data.walls Data.boxes} {Append Data.walls Data.boxes}}}
           else
             FD = {OS.rand} mod 4
+            {System.show random}
             Data.pos = pt(x:X y:Y)
 
             if FD == 0 then
