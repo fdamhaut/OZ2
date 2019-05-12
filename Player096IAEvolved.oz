@@ -174,8 +174,8 @@ in
       Result = death(NewData.life)
       {TreatStream T NewData}
     []doaction(ID Action)|T then
+
       NewData = {AdjoinAt {GetAction Data Action} fire nil}
-      {System.show NewData.pos#Action}
       ID = NewData.id
       {TreatStream T NewData}
     []info(Message)|T then
@@ -213,12 +213,19 @@ in
     DZone
     FD X Y
     NewData
+    End
   in
-    if Input.isTurnByTurn == false then
-      {Delay Input.thinkMin}
-      {System.show waited}
+    if Input.isTurnByTurn then
+      End = 0
+    else
+      thread
+        {Delay Input.thinkMin-50}
+        End = 0
+      end
     end
+
     case Data.nextAct of H|T then 
+      {Wait End}
       Action = move(H)
       {AdjoinAt Data nextAct T}
     else
@@ -227,20 +234,23 @@ in
       BBonus = {Closest Data.bonus Data.pos Mur}
       if BBonus \=nil then 
         Action = move(BBonus.1)
+        {Wait End}
         Data
       else 
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
           Action = move(BPoints.1)
+          {Wait End}
           Data
         else
           if Data.nbombs > 0 then %andthen {OS.rand} mod 3 < 2 then
             Action = bomb(Data.pos)
             NewData = {AdjoinAt Data nbombs Data.nbombs-1}
+            {Wait End}
             {AdjoinAt NewData nextAct {Safety Data.pos {DangerZone {Append [Data.pos] Data.bombs} Data.walls Data.boxes} {Append Data.walls Data.boxes}}}
           else
             FD = {OS.rand} mod 4
-            {System.show random}
+            %{System.show random}
             Data.pos = pt(x:X y:Y)
 
             if FD == 0 then
@@ -252,6 +262,7 @@ in
             else
               Action = move(pt(x:X y:Y-1))
             end
+            {Wait End}
             Data
           end
         end

@@ -77,8 +77,8 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player096IAEvolved player096Rnd]
-   ColorBombers = [red green]
+   Bombers = [player096Player1 player096Rnd]
+   ColorBombers = [black green]
 
 %%%% Parameters %%%%
 

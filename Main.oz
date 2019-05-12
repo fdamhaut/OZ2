@@ -610,6 +610,7 @@ in
   in
     case Action of action(act:Act id:ID) then
       if {Value.isDet Act} then
+        {Wait ID}
         PORT = {GetPort ID}
         case Act
         of move(Pos) then
@@ -730,7 +731,7 @@ in
     in
       case Bombs of (Pos#Time#ID)|TBombs then
         if Time > TimeByTick andthen {List.member Pos Fire}== false then
-          {TickBomb Boxes Bonus TBombs (Pos#(Time-TimeByTick)#ID)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
+          {TickBomb Boxes Bonus TBombs (Pos#(Time-(TimeByTick))#ID)|BombsLeft Points Walls Fire NewBoxes NewBonus NewBombs NewPoints NewFire}
         else
           MidFire = {ExplodeBomb Pos ID {Flatten Bombs|Walls} Boxes Bonus BombsLeft Points MidBoxes MidBonus MidBombs MidPoints nil}
           {TickBomb MidBoxes MidBonus TBombs MidBombs MidPoints Pos|Walls {Flatten MidFire|Fire} NewBoxes NewBonus NewBombs NewPoints NewFire}
@@ -770,6 +771,8 @@ in
 
       MidPosPlayers
       NewPosPlayers
+
+      Timer
     in
     
       {RemoveAllFire Fire}
@@ -781,13 +784,19 @@ in
         NewActions = nil
         NewPosPlayers = nil
         NewDead = nil
-        {Delay 150}
+        {Delay 200}
       else
-        {Simu Actions NewBoxes MidBonus MidBombs MidPoints PosPlayers NewBonus NewBombs NewPoints NewFire MidPosPlayers}
-        MidDead = {DeathByFire MidPosPlayers NewFire Dead}
-        NewPosPlayers = {ListRemoveIDs MidPosPlayers MidDead}
-        NewActions = {ActionUpdate Alive Actions MidDead NewDead}
-        {Delay TimeByTick}
+        thread 
+          {Simu Actions NewBoxes MidBonus MidBombs MidPoints PosPlayers NewBonus NewBombs NewPoints NewFire MidPosPlayers}
+          MidDead = {DeathByFire MidPosPlayers NewFire Dead}
+          NewPosPlayers = {ListRemoveIDs MidPosPlayers MidDead}
+          NewActions = {ActionUpdate Alive Actions MidDead NewDead}
+        end
+        thread
+          {Delay TimeByTick}
+          Timer = 0
+        end
+        {Wait Timer}
       end
 
       %% Check If Games Continues
@@ -815,11 +824,11 @@ in
   Walls = {FindMap 1}
 
   if Input.isTurnByTurn then
-    TickingBomb = Input.timingBomb+1
+    TickingBomb = Input.timingBomb + 1
     TimeByTick = 1
   else
     TimeByTick = 150
-    TickingBomb = Input.timingBombMin + TimeByTick
+    TickingBomb = Input.timingBombMin - TimeByTick
   end
 
   {Game}

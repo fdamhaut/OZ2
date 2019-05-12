@@ -212,12 +212,19 @@ in
     DZone
     FD X Y
     NewData
+    End
   in
-    if Input.isTurnByTurn == false then
-      {Delay Input.thinkMin}
+    if Input.isTurnByTurn then
+      End = 0
+    else
+      thread
+        {Delay Input.thinkMin-50}
+        End = 0
+      end
     end
     case Data.nextAct of H|T then 
       Action = move(H)
+      {Wait End}
       {AdjoinAt Data nextAct T}
     else
       DZone = {DangerZone Data.bombs Data.walls Data.boxes}
@@ -225,18 +232,21 @@ in
       BBonus = {Closest Data.bonus Data.pos Mur}
       if BBonus \=nil then 
         Action = move(BBonus.1)
+        {Wait End}
         Data
       
       else 
         BPoints = {Closest Data.points Data.pos Mur}
         if BPoints \= nil then
           Action = move(BPoints.1)
+          {Wait End}
           Data
 
         else
           if Data.nbombs > 0 andthen {OS.rand} mod 3 < 2 then
             Action = bomb(Data.pos)
             NewData = {AdjoinAt Data nbombs Data.nbombs-1}
+            {Wait End}
             {AdjoinAt NewData nextAct {Safety Data.pos {DangerZone {Append [Data.pos] Data.bombs} Data.walls Data.boxes} {Append Data.walls Data.boxes}}}
           else
             FD = {OS.rand} mod 4
@@ -251,6 +261,7 @@ in
             else
               Action = move(pt(x:X y:Y-1))
             end
+            {Wait End}
             Data
           end
         end

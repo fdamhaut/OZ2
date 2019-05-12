@@ -57,28 +57,36 @@ in
 
 %%%% Style of game %%%%
    
-   IsTurnByTurn = true
+   IsTurnByTurn = false
    UseExtention = false
    PrintOK = false
 
 
 %%%% Description of the map %%%%
    
-   NbRow = 7
-   NbColumn = 7
+   NbRow = 15
+   NbColumn = 15
    Map = [
-    [1 1 1 1 1 1 1]
-	  [1 4 0 0 2 3 1]
-	  [1 0 1 2 3 2 1]
-	  [1 0 1 3 2 0 1]
-	  [1 2 2 1 1 0 1]
-	  [1 3 2 0 0 4 1]
-    [1 1 1 1 1 1 1]]
+    [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]
+    [1 1 1 2 2 0 0 4 0 0 2 2 1 1 1]
+    [1 1 3 2 2 0 1 2 1 0 2 2 3 1 1]
+    [1 0 0 0 2 2 2 3 2 2 2 0 0 0 1]
+    [1 0 1 2 0 0 0 0 0 0 0 2 1 0 1]
+    [1 4 2 3 0 2 2 2 2 2 0 3 2 4 1]
+    [1 0 2 2 0 2 1 3 1 2 0 2 2 0 1]
+    [1 0 2 2 0 2 3 3 3 2 0 2 2 0 1]
+    [1 3 2 2 0 2 1 3 1 2 0 2 2 3 1]
+    [1 1 2 2 0 2 2 2 2 2 0 2 2 1 1]
+    [1 2 2 2 0 0 0 0 0 0 0 2 2 2 1]
+    [1 0 2 3 2 2 3 2 3 2 2 3 2 0 1]
+    [1 0 2 2 2 2 2 2 2 2 2 2 2 0 1]
+    [1 0 0 4 0 0 2 1 2 0 0 4 0 0 1]
+    [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]]
 %%%% Players description %%%%
 
-   NbBombers = 2
-   Bombers = [player096IAEvolved player096Rnd]
-   ColorBombers = [red green]
+   NbBombers = 5
+   Bombers = [player096IA player096IA player096Rnd player096Rnd player096IAEvolved]
+   ColorBombers = [grey grey green green red]
 
 %%%% Parameters %%%%
 
